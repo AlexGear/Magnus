@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName='ru.eltex.magnus.App'
+
+repositories {
+    maven {
+        url 'http://repo.spring.io/libs-release'
+    }
+}
+
+dependencies {
+    runtime files('libs/mysql-connector-java-8.0.15.jar')
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.4.RELEASE'
+    testCompile 'junit:junit:4.12'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'ru.eltex.magnus.App'
+    }
+}
