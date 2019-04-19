@@ -1,6 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'application'
 mainClassName='ru.eltex.magnus.App'
+run {
+    standardInput = System.in
+}
 
 repositories {
     maven {
@@ -19,3 +22,6 @@ jar {
         attributes 'Main-Class': 'ru.eltex.magnus.App'
     }
 }
+
+targetCompatibility = '8'
+sourceCompatibility = '8'
