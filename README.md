@@ -1,2 +1,2 @@
 # Magnus
-Magnus Frqater spectat te
+Magnus Frater spectat te
