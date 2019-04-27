@@ -1,0 +1,13 @@
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName='ru.eltex.magnus.streamer.App'
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'ru.eltex.magnus.streamer.App'
+    }
+}

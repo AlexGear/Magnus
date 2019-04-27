@@ -1,18 +1,42 @@
-.gradle
-/build/
+################################# SERVER #################################
+
+MagnusServer/.gradle
+MagnusServer/build/
 
 # Ignore Gradle GUI config
-gradle-app.setting
+MagnusServer/gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
+MagnusServer/!gradle-wrapper.jar
 
 # Cache of project
-.gradletasknamecache
+MagnusServer/.gradletasknamecache
 
 # # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
 # gradle/wrapper/gradle-wrapper.properties
 
-out/*
-.idea/*
-*.iml
+MagnusServer/out/*
+MagnusServer/.idea/*
+MagnusServer/*.iml
+
+
+################################# STREAMER #################################
+
+MagnusStreamer/.gradle
+MagnusStreamer/build/
+
+# Ignore Gradle GUI config
+MagnusStreamer/gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+MagnusStreamer/!gradle-wrapper.jar
+
+# Cache of project
+MagnusStreamer/.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+MagnusStreamer/out/*
+MagnusStreamer/.idea/*
+MagnusStreamer/*.iml
