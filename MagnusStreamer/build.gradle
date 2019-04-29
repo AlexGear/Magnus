@@ -1,6 +1,17 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'findbugs'
 mainClassName='ru.eltex.magnus.streamer.App'
+
+run {
+    standardInput = System.in
+}
+
+repositories {
+    maven {
+        url 'http://repo.spring.io/libs-release'
+    }
+}
 
 dependencies {
     testCompile 'junit:junit:4.12'
@@ -9,5 +20,12 @@ dependencies {
 jar {
     manifest {
         attributes 'Main-Class': 'ru.eltex.magnus.streamer.App'
+    }
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
     }
 }
