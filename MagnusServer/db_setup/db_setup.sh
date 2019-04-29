@@ -1,4 +1,6 @@
 #!/bin/bash
+# ASSUMING THAT YOU HAVE ALREADY CREATED THE USER
+
 CONTAINER=magnus-db
 USER=admin
 PASSWORD=ausrotten
