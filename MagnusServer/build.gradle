@@ -2,6 +2,10 @@ apply plugin: 'java'
 apply plugin: 'application'
 mainClassName='ru.eltex.magnus.server.App'
 
+run {
+    standardInput = System.in
+}
+
 repositories {
     maven {
         url 'http://repo.spring.io/libs-release'
