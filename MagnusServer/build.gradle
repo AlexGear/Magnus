@@ -1,6 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'findbugs'
+//apply plugin: 'findbugs'
 mainClassName='ru.eltex.magnus.server.App'
 
 run {
@@ -34,9 +34,9 @@ jar {
     }
 }
 
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-        html.enabled = true
-    }
-}
+//tasks.withType(FindBugs) {
+//    reports {
+//        xml.enabled = false
+//        html.enabled = true
+//    }
+//}
