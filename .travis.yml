@@ -1,0 +1,14 @@
+language: java
+services:
+  - mysql
+
+before_install:
+  - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
+  - mysql -e 'CREATE DATABASE magnus_test;'
+  - mysql -uroot magnus_test < db_setup/db.sql
+
+script:
+  - cd MagnusServer
+  - gradle build jar
+  - cd ../MagnusStreamer
+  - gradle build jar
