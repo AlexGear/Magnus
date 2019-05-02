@@ -1,8 +1,24 @@
 language: java
-services:
-  - mysql
+jdk:
+  - oraclejdk8
+
+addons:
+  apt:
+    sources:
+      - mysql-5.7-trusty
+    packages:
+      - mysql-server
+      - mysql-client
 
 before_install:
+  - sudo apt remove gradle
+  - sudo apt update
+  - wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
+  - sudo unzip -d /opt/gradle /tmp/gradle-*.zip
+  - export GRADLE_HOME=/opt/gradle/gradle-5.4.1
+  - export PATH=${GRADLE_HOME}/bin:${PATH}
+  - sudo mysql_upgrade
+  - sudo service mysql restart
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
   - mysql -e 'CREATE DATABASE magnus_test;'
   - mysql -uroot magnus_test < MagnusServer/db_setup/db.sql
