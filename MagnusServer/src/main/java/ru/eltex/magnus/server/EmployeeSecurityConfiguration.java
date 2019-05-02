@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
@@ -29,10 +30,9 @@ public class EmployeeSecurityConfiguration extends WebSecurityConfigurerAdapter 
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder authenticationMgr) throws Exception {
-        authenticationMgr.jdbcAuthentication().
-                withUser("employee").password("{noop}employee").roles("USER")
-                .and()
-                .withUser("admin").password("{noop}jj").roles("USER", "ADMIN");
+        authenticationMgr.inMemoryAuthentication()
+                .withUser("employee").password("$2a$10$EHdu/Df4YrHw95D/Wc1ImehKf5og0lHCN89al3b5Z/kiNRTQRcKJS").roles("USER")
+                .and().passwordEncoder(new BCryptPasswordEncoder());
     }
 
 }
