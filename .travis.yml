@@ -9,6 +9,8 @@ addons:
       - mysql-client
 
 before_install:
+  - sudo mysql_upgrade
+  - sudo service mysql restart
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
   - mysql -e 'CREATE DATABASE magnus_test;'
   - mysql -uroot magnus_test < MagnusServer/db_setup/db.sql
