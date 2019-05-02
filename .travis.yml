@@ -1,6 +1,12 @@
 language: java
-services:
-  - mysql
+
+addons:
+  apt:
+    sources:
+      - mysql-5.7-trusty
+    packages:
+      - mysql-server
+      - mysql-client
 
 before_install:
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
