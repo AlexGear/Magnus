@@ -44,10 +44,12 @@ public class StreamerRequester {
         try {
             int size = inputStream.readInt();
             System.out.println(size);
-            if(size < 0) return new byte[0];
+            if(size < 0) {
+                return new byte[0];
+            }
             byte[] data = new byte[size];
 
-            inputStream.read(data);
+            inputStream.read(data,0, size);
 
             return data;
         } catch (IOException e) {

@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'findbugs'
-mainClassName='ru.eltex.magnus.streamer.App'
+mainClassName='ru.eltex.magnus.streamer.Streamer'
 
 run {
     standardInput = System.in
@@ -19,7 +19,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'ru.eltex.magnus.streamer.App'
+        attributes 'Main-Class': 'ru.eltex.magnus.streamer.Streamer'
     }
 }
 
