@@ -5,6 +5,9 @@ import ru.eltex.magnus.server.db.dataclasses.Employee;
 import java.util.List;
 
 public interface EmployeesStorage {
-    Employee getEmployeeByLogin(String login);
     List<Employee> getAllEmployees();
+    Employee getEmployeeByLogin(String login);
+    boolean insertEmployee(Employee employee);
+    boolean updateEmployee(Employee employee);
+    boolean removeEmployeeByLogin(String login);
 }

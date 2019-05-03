@@ -6,6 +6,9 @@ import ru.eltex.magnus.server.db.dataclasses.OfflineStreamer;
 import java.util.List;
 
 public interface OfflineStreamersStorage {
-    OfflineStreamer getOfflineStreamerByLogin(String login);
     List<OfflineStreamer> getAllOfflineStreamers();
+    OfflineStreamer getOfflineStreamerByLogin(String login);
+    boolean insertOfflineStreamer(OfflineStreamer offlineStreamer);
+    boolean updateOfflineStreamer(OfflineStreamer offlineStreamer);
+    boolean removeOfflineStreamerByLogin(String login);
 }
