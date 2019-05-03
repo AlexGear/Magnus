@@ -1,91 +1,87 @@
 package ru.eltex.magnus.streamer;
 
-import ru.eltex.magnus.streamer.ScreenshotMaker;
-
 import java.awt.*;
-import java.io.*;
-import java.lang.String;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+
 
 public class Streamer {
 
-    public Socket socket;
+    private Socket socket;
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
 
-    private String login = "maxim";
-    private String password = "qwerty";
+    public Streamer() {
+        if (!connectToServer("localhost", 8081)) return;
+        if (!signIn("1", "123")) return;
+        listenToServer();
+    }
 
-    private void connectToServer(){
+    public static void main(String[] args){
+        new Streamer();
+    }
+
+    private boolean connectToServer(String host, int port) {
+        System.out.println("Trying to connect to server (" + host + ":" + port + ")");
         try {
-            socket = new Socket("localhost", 8081);
-            try {
-                socket.setTcpNoDelay(true);
-                System.out.println("Connected");
-                inputStream = new DataInputStream(socket.getInputStream());
-                outputStream = new DataOutputStream(socket.getOutputStream());
+            socket = new Socket(host, port);
+            if (!socket.isConnected()) {
+                System.out.println("Failed to connect");
+                return false;
+            }
+            socket.setTcpNoDelay(true);
+            System.out.println("Successfully connected");
+            inputStream = new DataInputStream(socket.getInputStream());
+            outputStream = new DataOutputStream(socket.getOutputStream());
+            return true;
+        } catch (IOException e) {
+            System.out.println("Failed to connect");
+            return false;
+        }
+    }
 
-                String authString = login + ":" + password;
-                sendToServ(authString.getBytes());
+    private boolean signIn(String login, String password) {
+        System.out.println("Trying to sign in");
+        String authString = login + ":" + password;
+        sendToServer(authString.getBytes());
+        String answer = new String(readFromServer());
+        System.out.println(answer);
+        return answer.equals("verified");
+    }
 
-                String answer = new String(readFromServ());
-                System.out.println(answer);
-                if (!answer.equals("verified")) return;
-
-                byte[] data;
-                while (socket.isConnected()) {
-                    System.out.println("Whaiting..");
-
-                    data = readFromServ();
-                    String command = new String(data);
-                    System.out.println(command);
-
-                    switch (command){
-                        case "screenshot" : sendToServ(getScreenshot()); break;
-                        default: break;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+    private void listenToServer() {
+        while (!socket.isClosed()) {
+            String command = new String(readFromServer());
+            switch (command) {
+                case "screenshot": sendToServer(getScreenshot()); break;
+                default: break;
             }
         }
-        catch (UnknownHostException e) {
+    }
+
+    public byte[] getScreenshot() {
+        try {
+            return new ScreenshotMaker().getScreenshot();
+        } catch (IOException | AWTException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            return new byte[0];
         }
     }
 
-
-
-    public byte[] getScreenshot(){
+    private void sendToServer(byte[] data) {
         try {
-            byte[] screenshot = new ScreenshotMaker().getScreenshot();
-            return screenshot;
-        } catch (AWTException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new byte[0];
-    }
-
-    private void sendToServ(byte[] data){
-        try {
-            System.out.println("Array size " + data.length);
             outputStream.writeInt(data.length);
             outputStream.flush();
             outputStream.write(data);
-            outputStream.flush();;
+            outputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private byte[] readFromServ(){
+    private byte[] readFromServer() {
         try {
             int size = inputStream.readInt();
             byte[] data = new byte[size];
@@ -93,16 +89,7 @@ public class Streamer {
             return data;
         } catch (IOException e) {
             e.printStackTrace();
+            return new byte[0];
         }
-        return new byte[0];
     }
-
-    public Streamer(){
-        connectToServer();
-    }
-
-    public static void main(String[] args){
-        new Streamer();
-    }
-
 }

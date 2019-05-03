@@ -1,5 +1,8 @@
 package ru.eltex.magnus.server;
 
+import ru.eltex.magnus.server.db.StoragesProvider;
+import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -10,9 +13,6 @@ import java.util.ArrayList;
 public class StreamersServer {
 
     static ArrayList<StreamerRequester> streamers;
-
-    static String TestLogin = "maxim";
-    static String TestPassword = "qwerty";
 
     public static void start() {
         new Thread(() -> {
@@ -55,16 +55,25 @@ public class StreamersServer {
                 outputStream.write(answer.getBytes());
                 outputStream.flush();
             }
-            else outputStream.write("failed".getBytes());
+            else {
+                String answer = "failed";
+                outputStream.writeInt(answer.length());
+                outputStream.flush();
+                outputStream.write(answer.getBytes());
+                outputStream.flush();
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static boolean checkAuthData(String[] authArray){
-        if(authArray.length != 2) return false;
-        return TestLogin.equals(authArray[0]) && TestPassword.equals(authArray[1]);
+    private static boolean checkAuthData(String[] authArray) {
+        if (authArray.length != 2) return false;
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
+        Employee employee = storage.getEmployeeByLogin(authArray[0]);
+        if (employee == null) return false;
+        return employee.getPassword().equals(authArray[1]);
     }
 
     public static StreamerRequester getStreamerReqByLogin(String login){
