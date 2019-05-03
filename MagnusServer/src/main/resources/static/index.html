@@ -1,7 +1,40 @@
 <html>
 <head>
+    <title>PhoneBook</title>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
+    <script src="jquery.js"></script>
+    <script>
+	    var canvas = document.createElement("canvas");
+		$(document).ready(function() {
+			$("#imagecontainer").html('<img id="image" height="600px">');
+			loadImage();
+			$("#button").click(loadImage);
+			setInterval(loadImage, 300);
+		});
+		function loadImage() {
+			$.ajax({
+		        url: 'screenshot',
+		        cache:false,
+		        xhr:function(){// Seems like the only way to get access to the xhr object
+		            var xhr = new XMLHttpRequest();
+		            xhr.responseType= 'blob'
+		            return xhr;
+		        },
+		        success: function(data){
+		            var img = document.getElementById('image');
+		            var url = window.URL || window.webkitURL;
+		            img.src = url.createObjectURL(data);
+		        },
+		        error:function(){
+
+		        }
+		    });
+		}
+	</script>
 </head>
 <body>
-<h1>This is the main page of Magnus!</h1>
+<div id="imagecontainer"></div>
+<button id="button">Take Screenshot</button>
+<div id="phonebook"></div>
 </body>
 </html>

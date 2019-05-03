@@ -35,6 +35,7 @@ public class App {
 
         ApplicationContext context = SpringApplication.run(App.class, args);
         System.setProperty("java.awt.headless", "false");
+        StreamersServer.start();
         try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))) {
             while (!"exit".equals(in.readLine().trim().toLowerCase())) ;
         }
