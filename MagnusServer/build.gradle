@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    runtime files('libs/mysql-connector-java-8.0.15.jar')
+    runtime files('libs/mysql-connector-java-8.0.16.jar')
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.4.RELEASE'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.0.4.RELEASE'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
