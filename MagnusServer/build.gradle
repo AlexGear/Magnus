@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'application'
 //apply plugin: 'findbugs'
 mainClassName='ru.eltex.magnus.server.App'
@@ -11,6 +12,7 @@ repositories {
     maven {
         url 'http://repo.spring.io/libs-release'
     }
+    mavenCentral()
 }
 
 dependencies {
@@ -21,6 +23,7 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 test {
@@ -36,6 +39,25 @@ configurations {
 jar {
     manifest {
         attributes 'Main-Class': 'ru.eltex.magnus.server.App'
+    }
+}
+buildscript {
+    ext.kotlin_version = '1.3.31'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
