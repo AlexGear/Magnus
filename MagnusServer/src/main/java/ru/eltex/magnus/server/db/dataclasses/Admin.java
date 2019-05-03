@@ -1,18 +1,16 @@
-package ru.eltex.magnus.server.db;
+package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
-public class Viewer {
+public class Admin {
     private String login;
     private String password;
-    private String name;
 
-    public Viewer() { }
+    public Admin() { }
 
-    public Viewer(String login, String password, String name) {
+    public Admin(String login, String password) {
         this.login = login;
         this.password = password;
-        this.name = name;
     }
 
     public String getLogin() {
@@ -31,26 +29,17 @@ public class Viewer {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Viewer viewer = (Viewer) o;
-        return Objects.equals(login, viewer.login) &&
-                Objects.equals(password, viewer.password) &&
-                Objects.equals(name, viewer.name);
+        Admin admin = (Admin) o;
+        return Objects.equals(login, admin.login) &&
+                Objects.equals(password, admin.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(login, password, name);
+        return Objects.hash(login, password);
     }
 }

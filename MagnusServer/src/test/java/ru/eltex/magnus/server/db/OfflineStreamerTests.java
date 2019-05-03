@@ -1,6 +1,8 @@
 package ru.eltex.magnus.server.db;
 
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.dataclasses.OfflineStreamer;
 
 import java.sql.Timestamp;
 

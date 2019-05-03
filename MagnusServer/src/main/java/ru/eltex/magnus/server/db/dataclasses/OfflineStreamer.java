@@ -1,4 +1,4 @@
-package ru.eltex.magnus.server.db;
+package ru.eltex.magnus.server.db.dataclasses;
 
 import java.sql.Timestamp;
 import java.util.Objects;

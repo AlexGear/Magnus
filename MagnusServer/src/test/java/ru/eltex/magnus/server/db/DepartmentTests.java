@@ -1,6 +1,7 @@
 package ru.eltex.magnus.server.db;
 
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.db.dataclasses.Department;
 
 import static org.junit.jupiter.api.Assertions.*;
 
