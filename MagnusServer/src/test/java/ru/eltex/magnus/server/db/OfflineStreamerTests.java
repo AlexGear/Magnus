@@ -11,10 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class OfflineStreamerTests {
     @Test
     void testOfflineStreamerConstructorSetsValues() {
-        Employee employee = new Employee();
+        String login = "shaggy";
         Timestamp lastSeen = new Timestamp(0);
-        OfflineStreamer o = new OfflineStreamer(employee, lastSeen);
-        assertEquals(employee, o.getEmployee());
+        OfflineStreamer o = new OfflineStreamer(login, lastSeen);
+        assertEquals(login, o.getLogin());
         assertEquals(lastSeen, o.getLastSeen());
     }
 
@@ -22,9 +22,9 @@ class OfflineStreamerTests {
     void testOfflineStreamerGetsSets() {
         OfflineStreamer o = new OfflineStreamer();
 
-        Employee employee = new Employee();
-        o.setEmployee(employee);
-        assertEquals(employee, o.getEmployee());
+        String login = "chef";
+        o.setLogin(login);
+        assertEquals(login, o.getLogin());
 
         Timestamp lastSeen = new Timestamp(0);
         o.setLastSeen(lastSeen);
