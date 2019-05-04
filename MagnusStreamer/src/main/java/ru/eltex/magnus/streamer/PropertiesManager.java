@@ -3,7 +3,6 @@ package ru.eltex.magnus.streamer;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Properties;
 
 
@@ -16,7 +15,7 @@ public class PropertiesManager {
 
     public boolean loadFromFile(String fileName) {
         Properties prop = new Properties();
-        try (FileReader reader = new FileReader(fileName, Charset.forName("UTF-8"))) {
+        try (FileReader reader = new FileReader(fileName)) {
             prop.load(reader);
         } catch (IOException e) {
             System.out.println("Failed to read config file: " + fileName);
@@ -31,12 +30,12 @@ public class PropertiesManager {
 
     public boolean saveToFile(String fileName) {
         Properties prop = new Properties();
-        prop.setProperty("serverAddress", getServerAddress());
+        prop.put("serverAddress", getServerAddress());
         prop.put("serverPort", getServerPort());
         prop.put("login", getLogin());
         prop.put("password", getPassword());
 
-        try (FileWriter writer = new FileWriter(fileName, Charset.forName("UTF-8"))) {
+        try (FileWriter writer = new FileWriter(fileName)) {
             prop.store(writer, "");
         } catch (IOException e) {
             System.out.println("Failed to write config file: " + fileName);
