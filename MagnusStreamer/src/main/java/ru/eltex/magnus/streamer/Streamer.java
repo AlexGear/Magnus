@@ -1,21 +1,24 @@
 package ru.eltex.magnus.streamer;
 
 import java.awt.*;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 
 public class Streamer {
+
+    private static final String PROPERTIES_FILE_PATH = "magnus.properties";
 
     private Socket socket;
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
 
     public Streamer() {
-        if (!connectToServer("localhost", 8081)) return;
-        if (!signIn("1", "123")) return;
+        PropertiesManager properties = new PropertiesManager();
+        if (!properties.loadFromFile(PROPERTIES_FILE_PATH)) return;
+
+        if (!connectToServer(properties.getServerAddress(), properties.getServerPort())) return;
+        if (!signIn(properties.getLogin(), properties.getPassword())) return;
         listenToServer();
     }
 
