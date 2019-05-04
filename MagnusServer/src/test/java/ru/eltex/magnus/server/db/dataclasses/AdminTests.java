@@ -1,4 +1,4 @@
-package ru.eltex.magnus.server.db;
+package ru.eltex.magnus.server.db.dataclasses;
 
 import org.junit.jupiter.api.Test;
 import ru.eltex.magnus.server.db.dataclasses.Admin;
