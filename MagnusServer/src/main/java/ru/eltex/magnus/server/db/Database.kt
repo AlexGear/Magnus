@@ -237,12 +237,8 @@ internal class Database(properties: DatabaseProperties) : EmployeesStorage, Depa
     override fun getAllOfflineStreamers(): List<OfflineStreamer>? {
         val sql = "SELECT login, last_seen FROM $OFFLINE_STREAMERS_TABLE"
         return try {
-            executeQuery(sql) { rs ->
-                val result = mutableListOf<OfflineStreamer>()
-                while (rs.next()) {
-                    result += OfflineStreamer(rs["login"], rs["last_seen"])
-                }
-                result
+            selectMany(sql) { rs ->
+                OfflineStreamer(rs["login"], rs["last_seen"])
             }
         } catch (e: SQLException) {
             e.printStackTrace()
