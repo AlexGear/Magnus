@@ -30,4 +30,21 @@ class OfflineStreamerTests {
         o.setLastSeen(lastSeen);
         assertEquals(lastSeen, o.getLastSeen());
     }
+
+    @Test
+    void testOfflineStreamerEqualsAndHashCode() {
+        String login = "khovansky";
+        Timestamp lastSeen = new Timestamp(0);
+        OfflineStreamer o1 = new OfflineStreamer(login, lastSeen);
+        assertEquals(o1, o1);
+        OfflineStreamer o2 = new OfflineStreamer(login, lastSeen);
+        assertEquals(o1, o2);
+        assertEquals(o2, o1);
+        assertEquals(o1.hashCode(), o2.hashCode());
+
+        o1.setLastSeen(new Timestamp(10));
+        assertNotEquals(o1, o2);
+        assertNotEquals(o2, o1);
+        assertNotEquals(o2.hashCode(), o1.hashCode());
+    }
 }
