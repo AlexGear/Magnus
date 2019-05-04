@@ -36,7 +36,12 @@ public class OfflineStreamer {
         if (o == null || getClass() != o.getClass()) return false;
         OfflineStreamer that = (OfflineStreamer) o;
         return Objects.equals(login, that.login) &&
-                Objects.equals(lastSeen, that.lastSeen);
+                timestampsApproximateEquals(lastSeen, that.lastSeen, 1000);
+    }
+
+    private static boolean timestampsApproximateEquals(Timestamp a, Timestamp b, int millisTolerance) {
+        return a == b || a != null && b != null
+                && Math.abs(a.getTime() - b.getTime()) <= millisTolerance;
     }
 
     @Override
