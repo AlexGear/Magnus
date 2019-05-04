@@ -53,4 +53,13 @@ public class Viewer {
     public int hashCode() {
         return Objects.hash(login, password, name);
     }
+
+    @Override
+    public String toString() {
+        return "Viewer{" +
+                "login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

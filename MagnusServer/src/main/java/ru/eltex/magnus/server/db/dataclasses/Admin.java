@@ -42,4 +42,12 @@ public class Admin {
     public int hashCode() {
         return Objects.hash(login, password);
     }
+
+    @Override
+    public String toString() {
+        return "Admin{" +
+                "login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

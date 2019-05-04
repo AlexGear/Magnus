@@ -43,4 +43,12 @@ public class OfflineStreamer {
     public int hashCode() {
         return Objects.hash(login, lastSeen);
     }
+
+    @Override
+    public String toString() {
+        return "OfflineStreamer{" +
+                "login='" + login + '\'' +
+                ", lastSeen=" + lastSeen +
+                '}';
+    }
 }
