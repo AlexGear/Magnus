@@ -3,7 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.eltex.magnus.server.db.TestStoragesProvider;
+import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.dataclasses.OfflineStreamer;
@@ -21,7 +21,7 @@ class OfflineStreamersStorageTests {
         cleanup();
 
         department = new Department(0, "Some department");
-        TestStoragesProvider.getDepartmentsStorage().insertDepartmentAndAssignId(department);
+        StoragesProvider.getDepartmentsStorage().insertDepartmentAndAssignId(department);
 
         employee = new Employee();
         employee.setLogin("iamoffline");
@@ -31,19 +31,19 @@ class OfflineStreamersStorageTests {
         employee.setJobName("Teacher");
         employee.setPhoneNumber("0912309");
         employee.setEmail("lkajsdf@lkjadsf.ru");
-        TestStoragesProvider.getEmployeesStorage().insertEmployee(employee);
+        StoragesProvider.getEmployeesStorage().insertEmployee(employee);
     }
 
     @AfterAll
     static void removeDepartmentAndEmployee() {
-        TestStoragesProvider.getEmployeesStorage().removeEmployeeByLogin(employee.getLogin());
-        TestStoragesProvider.getDepartmentsStorage().removeDepartmentById(department.getId());
+        StoragesProvider.getEmployeesStorage().removeEmployeeByLogin(employee.getLogin());
+        StoragesProvider.getDepartmentsStorage().removeDepartmentById(department.getId());
 
         cleanup();
     }
 
     static void cleanup() {
-        OfflineStreamersStorage storage = TestStoragesProvider.getOfflineStreamersStorage();
+        OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
         for(OfflineStreamer o : storage.getAllOfflineStreamers()) {
             storage.removeOfflineStreamerByLogin(o.getLogin());
         }
@@ -51,7 +51,7 @@ class OfflineStreamersStorageTests {
 
     @Test
     void testInsertGetUpdateRemoveOfflineStreamer() {
-        OfflineStreamersStorage storage = TestStoragesProvider.getOfflineStreamersStorage();
+        OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
 
         OfflineStreamer o = new OfflineStreamer(employee.getLogin(), new Timestamp(10000000));
         testInsertGetUpdateRemoveOfflineStreamer(storage, o);
@@ -80,7 +80,7 @@ class OfflineStreamersStorageTests {
 
     @Test
     void testImpossibilityToInsertOfflineStreamerWithNonexistentLogin() {
-        OfflineStreamersStorage storage = TestStoragesProvider.getOfflineStreamersStorage();
+        OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
         OfflineStreamer o = new OfflineStreamer(employee.getLogin() + "imnotreal", new Timestamp(0));
         assertFalse(storage.insertOfflineStreamer(o));
     }

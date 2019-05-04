@@ -3,7 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.eltex.magnus.server.db.TestStoragesProvider;
+import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 
@@ -15,7 +15,7 @@ class DepartmentsStorageTests {
     @BeforeAll
     @AfterAll
     static void cleanup() {
-        DepartmentsStorage storage = TestStoragesProvider.getDepartmentsStorage();
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
         for(Department d : storage.getAllDepartments()) {
             storage.removeDepartmentById(d.getId());
         }
@@ -23,7 +23,7 @@ class DepartmentsStorageTests {
 
     @Test
     void testInsertGetUpdateRemoveDepartment() {
-        DepartmentsStorage storage = TestStoragesProvider.getDepartmentsStorage();
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
 
         Department d = new Department(0, "asdf");
         testInsertGetUpdateRemoveDepartment(storage, d);

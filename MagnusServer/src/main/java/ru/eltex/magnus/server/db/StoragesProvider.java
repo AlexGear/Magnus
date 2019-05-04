@@ -5,17 +5,26 @@ import ru.eltex.magnus.server.db.storages.*;
 import java.io.IOException;
 
 public class StoragesProvider {
-    private static final String PROPERTIES_FILENAME = "magnus.properties";
+    private static final String DEFAULT_PROPERTIES_FILENAME = "magnus.properties";
     private static final Database DATABASE_INSTANCE;
 
     static {
+        String propertiesFilename = getPropertiesFilename();
         try {
-            DatabaseProperties properties = new DatabaseFileProperties(PROPERTIES_FILENAME);
+            DatabaseProperties properties = new DatabaseFileProperties(propertiesFilename);
             DATABASE_INSTANCE = new Database(properties);
         } catch (IOException e) {
-            String msg = "Failed to load DB properties from '" + PROPERTIES_FILENAME + "'";
+            String msg = "Failed to load DB properties from '" + propertiesFilename + "'";
             throw new Error(msg, e);
         }
+    }
+
+    private static String getPropertiesFilename() {
+        String filename = System.getProperty("propertiesFile");
+        if(filename != null && !filename.isEmpty()) {
+            return filename;
+        }
+        return DEFAULT_PROPERTIES_FILENAME;
     }
 
     public static EmployeesStorage getEmployeesStorage() {

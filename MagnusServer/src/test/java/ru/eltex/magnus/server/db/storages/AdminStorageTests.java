@@ -3,7 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.eltex.magnus.server.db.TestStoragesProvider;
+import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Admin;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AdminStorageTests {
     @Test
     void testAdminUpdate() {
-        AdminStorage storage = TestStoragesProvider.getAdminStorage();
+        AdminStorage storage = StoragesProvider.getAdminStorage();
         Admin backup = storage.getAdmin();
 
         Admin a = new Admin(backup.getLogin(), backup.getPassword());

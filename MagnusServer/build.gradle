@@ -28,7 +28,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    systemProperty 'propertiesFile', System.getProperty('propertiesFile')
+    systemProperty 'propertiesFile', System.getProperty('propertiesFile') ?: "magnus_test.properties"
 }
 
 configurations {

@@ -3,7 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.eltex.magnus.server.db.TestStoragesProvider;
+import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 
@@ -18,20 +18,20 @@ class EmployeesStorageTests {
     static void insertDepartment() {
         cleanup();
 
-        DepartmentsStorage storage = TestStoragesProvider.getDepartmentsStorage();
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
         storage.insertDepartmentAndAssignId(department);
     }
 
     @AfterAll
     static void removeDepartment() {
-        DepartmentsStorage storage = TestStoragesProvider.getDepartmentsStorage();
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
         storage.removeDepartmentById(department.getId());
 
         cleanup();
     }
 
     static void cleanup() {
-        EmployeesStorage storage = TestStoragesProvider.getEmployeesStorage();
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
         for(Employee d : storage.getAllEmployees()) {
             storage.removeEmployeeByLogin(d.getLogin());
         }
@@ -39,7 +39,7 @@ class EmployeesStorageTests {
 
     @Test
     void testInsertGetUpdateRemoveEmployee() {
-        EmployeesStorage storage = TestStoragesProvider.getEmployeesStorage();
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
 
         Employee e = new Employee();
         e.setLogin("pip");
@@ -90,7 +90,7 @@ class EmployeesStorageTests {
 
     @Test
     void testImpossibilityToInsertEmployeeWithNonexistentDepartment() {
-        EmployeesStorage storage = TestStoragesProvider.getEmployeesStorage();
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
         Department d2 = new Department(department.getId() + 5, "Moneymaking");
         Employee e = new Employee();
         e.setLogin("pip");

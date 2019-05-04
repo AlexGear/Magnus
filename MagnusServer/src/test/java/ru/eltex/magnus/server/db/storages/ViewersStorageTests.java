@@ -3,7 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.eltex.magnus.server.db.TestStoragesProvider;
+import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Viewer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,7 +12,7 @@ class ViewersStorageTests {
     @BeforeAll
     @AfterAll
     static void cleanup() {
-        ViewersStorage storage = TestStoragesProvider.getViewersStorage();
+        ViewersStorage storage = StoragesProvider.getViewersStorage();
         for(Viewer v : storage.getAllViewers()) {
             storage.removeViewerByLogin(v.getLogin());
         }
@@ -20,7 +20,7 @@ class ViewersStorageTests {
 
     @Test
     void testInsertGetUpdateRemoveViewer() {
-        ViewersStorage storage = TestStoragesProvider.getViewersStorage();
+        ViewersStorage storage = StoragesProvider.getViewersStorage();
 
         Viewer v = new Viewer("asdf", "zxczfy", "Anakin");
         testInsertGetUpdateRemoveViewer(storage, v);
