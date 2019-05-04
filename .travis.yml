@@ -19,6 +19,7 @@ before_install:
   - sudo mysql_upgrade
   - sudo service mysql restart
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
+  - mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'test'@'%';"
   - mysql -e 'CREATE DATABASE magnus_test;'
   - mysql -uroot magnus_test < MagnusServer/db_setup/db.sql
   - mysql -e "USE magnus_test; INSERT INTO admin (login, password) VALUES ('thebiggestbrother', 'qwerty');"
