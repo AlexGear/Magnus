@@ -25,6 +25,6 @@ before_install:
 
 script:
   - cd MagnusServer
-  - gradle build jar -DpropertiesFile=magnus_travis.properties
+  - gradle build jar -DpropertiesFile=magnus_travis.properties --info
   - cd ../MagnusStreamer
-  - gradle build jar
+  - gradle build jar --info
