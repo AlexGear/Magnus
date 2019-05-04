@@ -20,7 +20,16 @@ class ViewersStorageTests {
 
     @Test
     void testInsertGetUpdateRemoveViewer() {
+        ViewersStorage storage = TestStoragesProvider.getViewersStorage();
 
+        Viewer v = new Viewer("asdf", "zxczfy", "Anakin");
+        testInsertGetUpdateRemoveViewer(storage, v);
+
+        v = new Viewer("kljasfd", "kjasnfd", "Leia");
+        testInsertGetUpdateRemoveViewer(storage, v);
+
+        v = new Viewer("aosdif09", "xzlkc891", "Father");
+        testInsertGetUpdateRemoveViewer(storage, v);
     }
 
     void testInsertGetUpdateRemoveViewer(ViewersStorage storage, Viewer v) {
