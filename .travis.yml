@@ -21,7 +21,7 @@ before_install:
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'qwerty';"
   - mysql -e 'CREATE DATABASE magnus_test;'
   - mysql -uroot magnus_test < MagnusServer/db_setup/db.sql
-  - mysql -e "USE DATABASE magnus_test; INSERT INTO admin (login, password) VALUES ('thebiggestbrother', 'qwerty');"
+  - mysql -e "USE magnus_test; INSERT INTO admin (login, password) VALUES ('thebiggestbrother', 'qwerty');"
 
 script:
   - cd MagnusServer
