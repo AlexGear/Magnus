@@ -5,6 +5,15 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+/**
+ * Provides database properties loaded from a file<br>
+ *     The properties' names searched in the files are
+ *     <ol>
+ *         <li>Connection URL: {@value CONNECTION_URL_PROPERTY}</li>
+ *         <li>Login: {@value LOGIN_PROPERTY}</li>
+ *         <li>Password: {@value PASSWORD_PROPERTY}</li>
+ *     </ol>
+ */
 public class DatabaseFileProperties implements DatabaseProperties {
     private static final String CONNECTION_URL_PROPERTY = "mysql.connection_url";
     private static final String LOGIN_PROPERTY = "mysql.login";
@@ -14,6 +23,13 @@ public class DatabaseFileProperties implements DatabaseProperties {
     private final String login;
     private final String password;
 
+    /**
+     * Allocates a new {@link DatabaseFileProperties} object and loads properties from the specified file
+     * @param filename the file to load properties from
+     * @throws IOException thrown if and error occurred while reading file
+     * @throws NoSuchElementException thrown if either connection URL or login or password was not
+     * found in the properties file
+     */
     public DatabaseFileProperties(String filename) throws IOException, NoSuchElementException {
         try (FileReader reader = new FileReader(filename)) {
             Properties properties = new Properties();

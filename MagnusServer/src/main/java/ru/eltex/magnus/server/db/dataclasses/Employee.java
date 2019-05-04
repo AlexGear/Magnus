@@ -2,6 +2,10 @@ package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
+/**
+ * Class containing an employee's credential and personal information:
+ * login, password, name, {@link Department}, job name, phone number, email
+ */
 public class Employee {
     private String login;
     private String password;

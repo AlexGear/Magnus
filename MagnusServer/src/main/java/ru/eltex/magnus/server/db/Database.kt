@@ -4,6 +4,11 @@ import ru.eltex.magnus.server.db.dataclasses.*
 import ru.eltex.magnus.server.db.storages.*
 import java.sql.*
 
+/**
+ * Represents an object providing access to SQL database.
+ * @param properties {@link DatabaseProperties} object providing connection url, login and password
+ * needed to establish connection to the database
+ */
 class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsStorage,
         OfflineStreamersStorage, ViewersStorage, AdminStorage {
 
@@ -322,6 +327,9 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         return DriverManager.getConnection(connectionURL, databaseLogin, databasePassword)
     }
 
+    /**
+     * Executes SQL query with specified parameters and performs action on the results
+     */
     private inline fun <T> executeQuery(sql: String, vararg args: Any, action: (ResultSet) -> T) : T {
         return openConnection().use { connection ->
             if (args.isNotEmpty())
@@ -331,6 +339,10 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         }
     }
 
+    /**
+     * Executes SQL query that updates the database and performs specified action using id
+     * of just inserted record
+     */
     private inline fun executeUpdate(sql: String, vararg args: Any, lastInsertIdAction: (Int) -> Unit) : Boolean {
         return openConnection().use { connection ->
             val result = if (args.isNotEmpty())
@@ -348,6 +360,9 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         }
     }
 
+    /**
+     * Executes SQL query that updates the database records
+     */
     private fun executeUpdate(sql: String, vararg args: Any) : Boolean {
         return openConnection().use { connection ->
             if (args.isNotEmpty())
@@ -357,12 +372,18 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         }
     }
 
+    /**
+     * Executes SQL query and performs the specified selector on the first got result from the ResultSet
+     */
     private inline fun <T> selectFirstOrNull(sql: String, vararg args: Any, selector: (ResultSet) -> T) : T? {
         return executeQuery(sql, *args) { rs ->
             if (rs.first()) selector(rs) else null
         }
     }
 
+    /**
+     * Executes SQL query, transforms each got result using selector and collects into a list
+     */
     private inline fun <T> selectMany(sql: String, selector: (ResultSet) -> T) : List<T> {
         return executeQuery(sql) { rs ->
             val result = mutableListOf<T>()
@@ -373,6 +394,9 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
 
     private inline operator fun <reified T> ResultSet.get(s: String) = this.getObject(s) as T
 
+    /**
+     * Connection.prepareStatement that automatically fills the parameters
+     */
     private fun Connection.prepareStatement(sql: String, vararg args: Any) : PreparedStatement {
         val statement = this.prepareStatement(sql)
         for (i in args.indices) {

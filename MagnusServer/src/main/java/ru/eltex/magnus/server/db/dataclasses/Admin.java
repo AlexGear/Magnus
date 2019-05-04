@@ -2,12 +2,23 @@ package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
+/**
+ * Class containing the admin's credential: login and password
+ */
 public class Admin {
     private String login;
     private String password;
 
+    /**
+     * Allocates new {@link Admin} object with null login and password
+     */
     public Admin() { }
 
+    /**
+     * Allocates new {@link Admin} object with specified login and password
+     * @param login the login of the admin
+     * @param password the password of the admin
+     */
     public Admin(String login, String password) {
         this.login = login;
         this.password = password;
