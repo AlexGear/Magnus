@@ -4,7 +4,7 @@ import ru.eltex.magnus.server.db.dataclasses.*
 import ru.eltex.magnus.server.db.storages.*
 import java.sql.*
 
-internal class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsStorage,
+class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsStorage,
         OfflineStreamersStorage, ViewersStorage, AdminStorage {
 
     companion object {

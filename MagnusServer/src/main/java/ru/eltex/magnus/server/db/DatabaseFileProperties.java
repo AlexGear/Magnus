@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-class DatabaseFileProperties implements DatabaseProperties {
+public class DatabaseFileProperties implements DatabaseProperties {
     private static final String CONNECTION_URL_PROPERTY = "mysql.connection_url";
     private static final String LOGIN_PROPERTY = "mysql.login";
     private static final String PASSWORD_PROPERTY = "mysql.password";

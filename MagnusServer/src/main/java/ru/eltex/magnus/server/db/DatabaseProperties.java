@@ -1,6 +1,6 @@
 package ru.eltex.magnus.server.db;
 
-interface DatabaseProperties {
+public interface DatabaseProperties {
     String getConnectionURL();
     String getLogin();
     String getPassword();
