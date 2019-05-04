@@ -19,6 +19,8 @@ MagnusServer/out/*
 MagnusServer/.idea/*
 MagnusServer/*.iml
 
+MagnusServer/magnus.properties
+MagnusServer/magnus_test.properties
 
 ################################# STREAMER #################################
 
