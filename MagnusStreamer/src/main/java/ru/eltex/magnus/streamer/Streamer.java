@@ -9,21 +9,46 @@ import java.net.Socket;
 
 public class Streamer {
 
-    private Socket socket;
-    private DataInputStream inputStream;
-    private DataOutputStream outputStream;
+    private static Socket socket;
+    private static DataInputStream inputStream;
+    private static DataOutputStream outputStream;
+
+    private String host;
+    private int port;
+
+    private String login;
+    private String password;
+
+    private static boolean stopWorking = false;
+
+    public Streamer(String login, String password, String host, int port){
+        this.login = login;
+        this.password = password;
+        this.host = host;
+        this.port = port;
+
+        if (!connectToServer()){
+            GUI.sendUserErrorMsg("Disconnected");
+            return;
+        }
+        if (!signIn()){
+            GUI.sendUserErrorMsg("Bad login or password");
+            return;
+        }
+        GUI.sendUserInformMsg("Connected");
+        stopWorking = false;
+        listenToServer();
+    }
 
     public Streamer() {
-        if (!connectToServer("localhost", 8081)) return;
-        if (!signIn("1", "123")) return;
-        listenToServer();
+        this("1", "123", "localhost", 8081);
     }
 
     public static void main(String[] args){
         new Streamer();
     }
 
-    private boolean connectToServer(String host, int port) {
+    private boolean connectToServer() {
         System.out.println("Trying to connect to server (" + host + ":" + port + ")");
         try {
             socket = new Socket(host, port);
@@ -42,7 +67,39 @@ public class Streamer {
         }
     }
 
-    private boolean signIn(String login, String password) {
+    private void reconnectToServer(){
+        GUI.sendUserWarningMsg("Reconnecting");
+        boolean connected = false;
+        while (!connected){
+            connected = connectToServer();
+            if(!connected){
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            else GUI.sendUserInformMsg("Connected");
+        }
+        if(!signIn()) {
+            GUI.sendUserErrorMsg("Bad login or password");
+            disconnect();
+        }
+    }
+
+    public static void disconnect(){
+        try {
+            outputStream.close();
+            inputStream.close();
+            socket.close();
+            stopWorking = true;
+            GUI.sendUserErrorMsg("Disconnected");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean signIn() {
         System.out.println("Trying to sign in");
         String authString = login + ":" + password;
         sendToServer(authString.getBytes());
@@ -54,9 +111,11 @@ public class Streamer {
     private void listenToServer() {
         while (!socket.isClosed()) {
             String command = new String(readFromServer());
+            if(stopWorking) return;
             switch (command) {
                 case "screenshot": sendToServer(getScreenshot()); break;
-                default: break;
+                case "checkup": sendToServer("connected".getBytes()); break;
+                case "": reconnectToServer(); break;
             }
         }
     }
@@ -92,4 +151,5 @@ public class Streamer {
             return new byte[0];
         }
     }
+
 }
