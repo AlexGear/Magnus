@@ -1,5 +1,6 @@
 package ru.eltex.magnus.server;
 
+import ru.eltex.magnus.server.db.Database;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
@@ -19,6 +20,7 @@ public class StreamersServer {
             try(ServerSocket server = new ServerSocket(8081)) {
                 System.out.println("Server Started");
                 streamers = new ArrayList<>();
+                new Thread(() -> updateOnlineStreamersList()).start();
                 while (!server.isClosed()){
                     System.out.println("Whaiting for new client");
                     Socket uncheckedStreamer = server.accept();
@@ -30,7 +32,7 @@ public class StreamersServer {
             }catch (IOException e){
                 e.printStackTrace();
             }
-        }).run();
+        }).start();
     }
 
     static void waitingForStreamerSignUp(Socket streamer){
@@ -47,21 +49,18 @@ public class StreamersServer {
             boolean verificated = checkAuthData(authArray);
             System.out.println("Recieved auth data: " + authArray[0] + " " + authArray[1]);
 
+            String answer;
             if(verificated){
                 streamers.add(new StreamerRequester(streamer,inputStream, outputStream, authArray[0]));
-                String answer = "verified";
-                outputStream.writeInt(answer.length());
-                outputStream.flush();
-                outputStream.write(answer.getBytes());
-                outputStream.flush();
+                answer = "verified";
             }
             else {
-                String answer = "failed";
-                outputStream.writeInt(answer.length());
-                outputStream.flush();
-                outputStream.write(answer.getBytes());
-                outputStream.flush();
+                answer = "failed";
             }
+            outputStream.writeInt(answer.length());
+            outputStream.flush();
+            outputStream.write(answer.getBytes());
+            outputStream.flush();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -78,6 +77,22 @@ public class StreamersServer {
 
     public static StreamerRequester getStreamerReqByLogin(String login){
         return streamers.stream().filter(x->x.getLogin().equals(login)).findFirst().get();
+    }
+
+    private static void updateOnlineStreamersList(){
+        while (true){
+            for (StreamerRequester var : streamers) {
+                if (!var.checkStreamerConnection()) {
+                    streamers.remove(var);
+                    break;
+                }
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package ru.eltex.magnus.server;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 
 public class StreamerRequester {
@@ -24,27 +25,41 @@ public class StreamerRequester {
 
     public synchronized byte[] getScreenshot(){
 
+        try {
             String command = "screenshot";
             sendToStreamer(command.getBytes());
             return readFromStreamer();
+        }catch (IOException e){
+            e.printStackTrace();
+            return new byte[0];
+        }
     }
 
-    private void sendToStreamer(byte[] data){
+    public boolean checkStreamerConnection(){
         try {
+            if(socket.isClosed()) return true;
+            String command = "checkup";
+            sendToStreamer(command.getBytes());
+            String answer = new String(readFromStreamer());
+            return answer != "";
+        }catch (IOException e){
+            e.printStackTrace();
+            System.out.println("catched");
+            return false;
+        }
+    }
+
+    private void sendToStreamer(byte[] data) throws IOException {
             outputStream.writeInt(data.length);
             outputStream.flush();
             outputStream.write(data);
             outputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
-    private byte[] readFromStreamer(){
-        try {
+    private synchronized byte[] readFromStreamer() throws IOException{
             int size = inputStream.readInt();
             System.out.println(size);
-            if(size < 0) {
+            if(size <= 0 || size > 300000) {
                 return new byte[0];
             }
             byte[] data = new byte[size];
@@ -52,9 +67,5 @@ public class StreamerRequester {
             inputStream.read(data,0, size);
 
             return data;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new byte[0];
     }
 }
