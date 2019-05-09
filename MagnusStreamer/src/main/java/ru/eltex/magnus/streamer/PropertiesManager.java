@@ -8,6 +8,11 @@ import java.util.Properties;
 
 public class PropertiesManager {
 
+    private static final String SERVER_ADDRESS_PROPERTY = "server.address";
+    private static final String SERVER_PORT_PROPERTY = "server.port";
+    private static final String LOGIN_PROPERTY = "user.login";
+    private static final String PASSWORD_PROPERTY = "user.password";
+
     private String serverAddress;
     private int serverPort;
     private String login;
@@ -21,19 +26,19 @@ public class PropertiesManager {
             System.out.println("Failed to read config file: " + fileName);
             return false;
         }
-        setServerAddress(prop.getProperty("serverAddress", ""));
-        setServerPort(Integer.parseInt(prop.getProperty("serverPort", "0")));
-        setLogin(prop.getProperty("login", ""));
-        setPassword(prop.getProperty("password", ""));
+        setServerAddress(prop.getProperty(SERVER_ADDRESS_PROPERTY, ""));
+        setServerPort(Integer.parseInt(prop.getProperty(SERVER_PORT_PROPERTY, "0")));
+        setLogin(prop.getProperty(LOGIN_PROPERTY, ""));
+        setPassword(prop.getProperty(PASSWORD_PROPERTY, ""));
         return true;
     }
 
     public boolean saveToFile(String fileName) {
         Properties prop = new Properties();
-        prop.put("serverAddress", getServerAddress());
-        prop.put("serverPort", getServerPort());
-        prop.put("login", getLogin());
-        prop.put("password", getPassword());
+        prop.put(SERVER_ADDRESS_PROPERTY, getServerAddress());
+        prop.put(SERVER_PORT_PROPERTY, getServerPort());
+        prop.put(LOGIN_PROPERTY, getLogin());
+        prop.put(PASSWORD_PROPERTY, getPassword());
 
         try (FileWriter writer = new FileWriter(fileName)) {
             prop.store(writer, "");
