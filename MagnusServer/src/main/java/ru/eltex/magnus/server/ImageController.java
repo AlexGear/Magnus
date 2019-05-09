@@ -10,7 +10,7 @@ import java.io.IOException;
 public class ImageController {
     @GetMapping("screenshot")
     public byte[] getScreenshot() throws AWTException, IOException {
-        StreamerRequester streamerRequester = StreamersServer.getStreamerReqByLogin("maxim");
+        StreamerRequester streamerRequester = StreamersServer.getStreamerReqByLogin("1");
         return streamerRequester.getScreenshot();
     }
 }
