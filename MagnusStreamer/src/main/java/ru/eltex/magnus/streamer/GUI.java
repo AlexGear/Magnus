@@ -5,13 +5,12 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
 import javax.imageio.*;
 import javax.swing.*;
 
 public class GUI extends JFrame {
 
-    private static final int WINDOW_H = 250;
+    private static final int WINDOW_H = 280;
     private static final int WINDOW_W = 200;
 
     private static TrayIcon trayIcon;
@@ -155,7 +154,8 @@ public class GUI extends JFrame {
         App.properties.setLogin(login);
         App.properties.setPassword(password);
 
-        new Thread(Streamer::new).start();
+        Thread stream = new Thread(App.streamer);
+        stream.start();
     }
 
     private static void displayMsg(String msg, MessageType type) {

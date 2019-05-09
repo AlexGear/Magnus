@@ -5,7 +5,7 @@ import java.io.*;
 import java.net.Socket;
 
 
-public class Streamer {
+public class Streamer implements Runnable {
 
     private static Socket socket;
     private static DataInputStream inputStream;
@@ -13,8 +13,9 @@ public class Streamer {
 
     private static boolean stopWorking = false;
 
-    public Streamer() {
-        if (!connectToServer()){
+    @Override
+    public void run() {
+        if (!connectToServer()) {
             GUI.sendUserErrorMsg("Disconnected");
             return;
         }
