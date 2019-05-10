@@ -5,7 +5,6 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.InetAddress;
 import javax.imageio.*;
 import javax.swing.*;
 
@@ -14,7 +13,7 @@ import static javax.swing.JOptionPane.*;
 public class GUI extends JFrame {
 
     private static final int WINDOW_H = 300;
-    private static final int WINDOW_W = 300;
+    private static final int WINDOW_W = 270;
 
     private static GUI instance;
 
@@ -28,8 +27,7 @@ public class GUI extends JFrame {
     private JTextField portField;
     private JTextField loginField;
     private JTextField passwordField;
-    private JButton okButton;
-    private JButton disconnectButton;
+    //    private JButton disconnectButton;
 
     public static void init() {
         if(instance == null) {
@@ -113,14 +111,13 @@ public class GUI extends JFrame {
     }
 
     private void fillWindowContent() {
-
         status = new JLabel("   ");
         status.setSize(new Dimension(WINDOW_W - 30, 30));
         status.setHorizontalAlignment(JLabel.CENTER);
         status.setVerticalAlignment(JLabel.VERTICAL);
         add(status);
 
-        add(new JLabel("IP  "));
+        add(new JLabel("IP"));
         hostField = new JTextField();
         hostField.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
         add(hostField);
@@ -141,19 +138,20 @@ public class GUI extends JFrame {
         add(passwordField);
 
         add(new JLabel("    "));
-        okButton = new JButton("OK");
-        okButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
-        okButton.addActionListener(actionEvent-> {
-            setItemsEnabled(false);
-            updateProperties();
+        JButton saveButton = new JButton("Save and Hide");
+        saveButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
+        saveButton.addActionListener(actionEvent-> {
+            if(updateProperties()) {
+                setVisible(false);
+            }
         });
-        add(okButton);
+        add(saveButton);
 
-        disconnectButton = new JButton("Disconnect");
-        disconnectButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
-        disconnectButton.setVisible(false);
-        disconnectButton.addActionListener(actionEvent -> App.STREAMER.disconnect());
-        add(disconnectButton);
+//        disconnectButton = new JButton("Disconnect");
+//        disconnectButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
+//        disconnectButton.setVisible(false);
+//        disconnectButton.addActionListener(actionEvent -> App.STREAMER.disconnect());
+//        add(disconnectButton);
     }
 
     private void populateControlsUsingProperties() {
@@ -163,17 +161,17 @@ public class GUI extends JFrame {
         passwordField.setText(App.PROPERTIES.getPassword());
     }
 
-    private void setItemsEnabled(boolean value) {
-        hostField.setEnabled(value);
-        portField.setEnabled(value);
-        loginField.setEnabled(value);
-        passwordField.setEnabled(value);
+//    private void setItemsEnabled(boolean value) {
+//        hostField.setEnabled(value);
+//        portField.setEnabled(value);
+//        loginField.setEnabled(value);
+//        passwordField.setEnabled(value);
+//
+//        saveButton.setVisible(value);
+//        disconnectButton.setVisible(!value);
+//    }
 
-        okButton.setVisible(value);
-        disconnectButton.setVisible(!value);
-    }
-
-    private void updateProperties() {
+    private boolean updateProperties() {
         String host = hostField.getText().trim();
         String portStr = portField.getText().trim();
         String login = loginField.getText().trim();
@@ -181,28 +179,34 @@ public class GUI extends JFrame {
 
         if (host.isEmpty() || portStr.isEmpty() || login.isEmpty() || password.isEmpty()) {
             errorMsg("Please, fill all the fields");
-            return;
+            return false;
         }
 
-        int port = 0;
+        int port;
         try {
             port = Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
             errorMsg("Port must be a number");
-            return;
+            return false;
         }
         if(port < 0 || port > 65535) {
-            errorMsg("Port must be in range from 0 to 65535");
-            return;
+            errorMsg("Port must be in range [0; 65535]");
+            return false;
         }
 
         App.PROPERTIES.setServerAddress(host);
         App.PROPERTIES.setServerPort(port);
         App.PROPERTIES.setLogin(login);
         App.PROPERTIES.setPassword(password);
-        App.PROPERTIES.save();
+        if(!App.PROPERTIES.save()) {
+            final String message = "Failed to save properties";
+            final String title = "Error saving properties";
+            JOptionPane.showMessageDialog(this, message, title, WARNING_MESSAGE);
+        }
 
         App.STREAMER.onPropertiesUpdated();
+
+        return true;
     }
 
     private void displayMsg(String msg, MessageType type) {
@@ -222,11 +226,11 @@ public class GUI extends JFrame {
     private void errorMsg(String msg) {
         trayIcon.displayMessage("", msg, MessageType.ERROR);
         displayMsg(msg, MessageType.ERROR);
-        setItemsEnabled(true);
+//        setItemsEnabled(true);
     }
 
     private void warningMsg(String msg) {
-        instance.displayMsg(msg, MessageType.WARNING);
+        displayMsg(msg, MessageType.WARNING);
     }
 
     private void informMsg(String msg) {
