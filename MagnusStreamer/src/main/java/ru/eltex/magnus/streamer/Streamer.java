@@ -1,6 +1,5 @@
 package ru.eltex.magnus.streamer;
 
-import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 
@@ -99,17 +98,17 @@ public class Streamer implements Runnable {
             String command = new String(readFromServer());
             if(stopWorking) return;
             switch (command) {
-                case "screenshot": sendToServer(getScreenshot()); break;
+                case "screenshot": sendToServer(takeScreenshot()); break;
                 case "checkup": sendToServer("connected".getBytes()); break;
                 case "": reconnectToServer(); break;
             }
         }
     }
 
-    public byte[] getScreenshot() {
+    public byte[] takeScreenshot() {
         try {
-            return new ScreenshotMaker().getScreenshot();
-        } catch (IOException | AWTException e) {
+            return ScreenshotMaker.takeScreenshot();
+        } catch (IOException e) {
             e.printStackTrace();
             return new byte[0];
         }
