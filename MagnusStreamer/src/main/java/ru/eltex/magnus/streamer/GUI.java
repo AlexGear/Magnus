@@ -78,9 +78,12 @@ public class GUI extends JFrame {
     private void createTrayIcon() throws AWTException {
         trayIcon = new TrayIcon(normalIcon);
         trayIcon.setImageAutoSize(true);
-        trayIcon.addActionListener(actionEvent -> {
-            setVisible(true);
-            setState(JFrame.NORMAL);
+        trayIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                setVisible(true);
+                setState(JFrame.NORMAL);
+            }
         });
 
         MouseMotionListener mouM = new MouseMotionListener() {
