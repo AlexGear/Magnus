@@ -53,6 +53,7 @@ public class GUI extends JFrame {
 
         loadIcons();
         fillWindowContent();
+        populateControlsUsingProperties();
         setWindowSettings();
 
         try {
@@ -154,6 +155,13 @@ public class GUI extends JFrame {
         add(disconnectButton);
     }
 
+    private void populateControlsUsingProperties() {
+        hostField.setText(App.PROPERTIES.getServerAddress());
+        portField.setText(String.valueOf(App.PROPERTIES.getServerPort()));
+        loginField.setText(App.PROPERTIES.getLogin());
+        passwordField.setText(App.PROPERTIES.getPassword());
+    }
+
     private void setItemsEnabled(boolean value) {
         hostField.setEnabled(value);
         portField.setEnabled(value);
@@ -179,6 +187,7 @@ public class GUI extends JFrame {
         App.PROPERTIES.setServerPort(Integer.parseInt(port));
         App.PROPERTIES.setLogin(login);
         App.PROPERTIES.setPassword(password);
+        App.PROPERTIES.save();
 
         App.STREAMER.onPropertiesUpdated();
     }

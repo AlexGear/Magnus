@@ -13,12 +13,17 @@ public class PropertiesManager {
     private static final String LOGIN_PROPERTY = "user.login";
     private static final String PASSWORD_PROPERTY = "user.password";
 
+    private final String fileName;
     private String serverAddress;
     private int serverPort;
     private String login;
     private String password;
 
-    public boolean loadFromFile(String fileName) {
+    public PropertiesManager(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public boolean load() {
         Properties prop = new Properties();
         try (FileReader reader = new FileReader(fileName)) {
             prop.load(reader);
@@ -33,12 +38,12 @@ public class PropertiesManager {
         return true;
     }
 
-    public boolean saveToFile(String fileName) {
+    public boolean save() {
         Properties prop = new Properties();
-        prop.put(SERVER_ADDRESS_PROPERTY, getServerAddress());
-        prop.put(SERVER_PORT_PROPERTY, getServerPort());
-        prop.put(LOGIN_PROPERTY, getLogin());
-        prop.put(PASSWORD_PROPERTY, getPassword());
+        prop.setProperty(SERVER_ADDRESS_PROPERTY, getServerAddress());
+        prop.setProperty(SERVER_PORT_PROPERTY, String.valueOf(getServerPort()));
+        prop.setProperty(LOGIN_PROPERTY, getLogin());
+        prop.setProperty(PASSWORD_PROPERTY, getPassword());
 
         try (FileWriter writer = new FileWriter(fileName)) {
             prop.store(writer, "");
