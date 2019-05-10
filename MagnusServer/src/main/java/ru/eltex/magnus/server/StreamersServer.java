@@ -5,28 +5,38 @@ import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 
+import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.lang.String;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 public class StreamersServer {
+    private static final int MAX_READ_BUFFER_SIZE = 2 << 10;
 
-    static ArrayList<StreamerRequester> streamers;
+    private static ArrayList<StreamerRequester> streamers;
+
+    private static Thread thread;
 
     public static void start() {
-        Thread thread = new Thread(() -> {
+        if (thread != null) {
+            return;
+        }
+        thread = new Thread(() -> {
             try (ServerSocket server = new ServerSocket(8081)) {
                 System.out.println("Server Started");
                 streamers = new ArrayList<>();
 
-                Thread updateStreamersThread = new Thread(() -> updateOnlineStreamersList());
+                Thread updateStreamersThread = new Thread(StreamersServer::updateOnlineStreamersList);
                 updateStreamersThread.setDaemon(true);
                 updateStreamersThread.start();
 
                 while (!server.isClosed()) {
-                    System.out.println("Whaiting for new client");
+                    System.out.println("Waiting for new client");
                     Socket uncheckedStreamer = server.accept();
                     uncheckedStreamer.setTcpNoDelay(true);
                     System.out.println("New Client Connected");
@@ -44,36 +54,56 @@ public class StreamersServer {
         thread.start();
     }
 
-    static void waitingForStreamerSignUp(Socket streamer){
-        try  {
+    public static StreamerRequester getStreamerReqByLogin(String login) {
+        Optional<StreamerRequester> result = streamers.stream().filter(x -> x.getLogin().equals(login)).findFirst();
+        if (!result.isPresent()) {
+            return null;
+        }
+        return result.get();
+    }
+
+    private static void waitingForStreamerSignUp(Socket streamer) {
+        try {
             DataInputStream inputStream = new DataInputStream(streamer.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(streamer.getOutputStream());
 
-            int size = inputStream.readInt();//inputStream.read();
-            byte[] newbyte = new byte[size];
-            inputStream.read(newbyte);
-            String authString = new String(newbyte);
+            byte[] bytes = readMessage(inputStream);
+            if (bytes == null) return;
 
+            String authString = new String(bytes);
             String[] authArray = authString.split(":");
-            boolean verificated = checkAuthData(authArray);
-            System.out.println("Recieved auth data: " + authArray[0] + " " + authArray[1]);
+            boolean verified = checkAuthData(authArray);
+            System.out.println("Received auth data: " + authArray[0] + " " + authArray[1]);
 
             String answer;
-            if(verificated){
-                streamers.add(new StreamerRequester(streamer,inputStream, outputStream, authArray[0]));
+            if (verified) {
+                streamers.add(new StreamerRequester(streamer, inputStream, outputStream, authArray[0]));
                 answer = "verified";
-            }
-            else {
+            } else {
                 answer = "failed";
             }
             outputStream.writeInt(answer.length());
-            outputStream.flush();
             outputStream.write(answer.getBytes());
             outputStream.flush();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static byte[] readMessage(DataInputStream inputStream) throws IOException {
+        int size = inputStream.readInt();
+        if (size < 0 || size > MAX_READ_BUFFER_SIZE) {
+            System.err.println("Unacceptable message size: " + size);
+            return null;
+        }
+
+        byte[] buffer = new byte[size];
+        int actualSize = inputStream.read(buffer, 0, size);
+        if (size != actualSize) {
+            System.err.println("Expected " + size + "bytes but got " + actualSize);
+            return null;
+        }
+        return buffer;
     }
 
     private static boolean checkAuthData(String[] authArray) {
@@ -84,24 +114,13 @@ public class StreamersServer {
         return employee.getPassword().equals(authArray[1]);
     }
 
-    public static StreamerRequester getStreamerReqByLogin(String login){
-        return streamers.stream().filter(x->x.getLogin().equals(login)).findFirst().get();
-    }
-
-    private static void updateOnlineStreamersList(){
-        while (true){
-            for (StreamerRequester var : streamers) {
-                if (!var.checkStreamerConnection()) {
-                    streamers.remove(var);
-                    break;
-                }
-            }
-            try {
+    private static void updateOnlineStreamersList() {
+        try {
+            while (true) {
+                streamers.removeIf(s -> !s.checkStreamerConnection());
                 Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
+        } catch (InterruptedException ignored) {
         }
     }
-
 }

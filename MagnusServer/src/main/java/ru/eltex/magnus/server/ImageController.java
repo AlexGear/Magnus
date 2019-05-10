@@ -9,8 +9,11 @@ import java.io.IOException;
 @RestController
 public class ImageController {
     @GetMapping("screenshot")
-    public byte[] getScreenshot() throws AWTException, IOException {
+    public byte[] takeScreenshot() {
         StreamerRequester streamerRequester = StreamersServer.getStreamerReqByLogin("1");
-        return streamerRequester.getScreenshot();
+        if (streamerRequester != null) {
+            return streamerRequester.takeScreenshot();
+        }
+        return new byte[0];
     }
 }
