@@ -16,23 +16,32 @@ public class StreamersServer {
     static ArrayList<StreamerRequester> streamers;
 
     public static void start() {
-        new Thread(() -> {
-            try(ServerSocket server = new ServerSocket(8081)) {
+        Thread thread = new Thread(() -> {
+            try (ServerSocket server = new ServerSocket(8081)) {
                 System.out.println("Server Started");
                 streamers = new ArrayList<>();
-                new Thread(() -> updateOnlineStreamersList()).start();
-                while (!server.isClosed()){
+
+                Thread updateStreamersThread = new Thread(() -> updateOnlineStreamersList());
+                updateStreamersThread.setDaemon(true);
+                updateStreamersThread.start();
+
+                while (!server.isClosed()) {
                     System.out.println("Whaiting for new client");
                     Socket uncheckedStreamer = server.accept();
                     uncheckedStreamer.setTcpNoDelay(true);
                     System.out.println("New Client Connected");
-                    new Thread(() -> waitingForStreamerSignUp(uncheckedStreamer)).run();
+
+                    Thread signUpThread = new Thread(() -> waitingForStreamerSignUp(uncheckedStreamer));
+                    signUpThread.setDaemon(true);
+                    signUpThread.start();
                 }
 
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 
     static void waitingForStreamerSignUp(Socket streamer){
