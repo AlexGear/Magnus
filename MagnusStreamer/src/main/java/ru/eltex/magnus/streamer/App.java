@@ -4,18 +4,15 @@ package ru.eltex.magnus.streamer;
 public class App {
 
     private static final String PROPERTIES_FILE_PATH = "magnus.properties";
-    public static final PropertiesManager properties = new PropertiesManager();
-    public static final Streamer streamer = new Streamer();
+    public static final PropertiesManager PROPERTIES = new PropertiesManager();
+    public static final Streamer STREAMER = new Streamer();
 
     public static void main(String[] args) {
         GUI.init();
-        if (!properties.loadFromFile(PROPERTIES_FILE_PATH)) {
+        if (!PROPERTIES.loadFromFile(PROPERTIES_FILE_PATH)) {
             GUI.sendUserErrorMsg("Can't load properties");
-            return;
+            System.exit(1);
         }
-
-        Thread stream = new Thread(streamer);
-        stream.setDaemon(true);
-        stream.start();
+        STREAMER.init();
     }
 }

@@ -4,38 +4,78 @@ import java.io.*;
 import java.net.Socket;
 
 
-public class Streamer implements Runnable {
+public class Streamer {
 
-    private static Socket socket;
-    private static DataInputStream inputStream;
-    private static DataOutputStream outputStream;
+    private Socket socket;
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
 
-    private static boolean stopWorking = false;
+    private Thread thread;
 
-    @Override
-    public void run() {
-        if (!connectToServer()) {
-            GUI.sendUserErrorMsg("Disconnected");
+    public void init() {
+        if(thread != null) {
             return;
         }
-        if (!signIn()) {
-            GUI.sendUserErrorMsg("Bad login or password");
+        startThread();
+    }
+
+    private void startThread() {
+        thread = new Thread(this::threadProc);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public void onPropertiesUpdated() {
+        if(thread == null) {
+            System.out.println("Streamer is not initialized");
             return;
         }
-        GUI.sendUserInformMsg("Connected");
-        stopWorking = false;
-        listenToServer();
+        thread.interrupt();
+        startThread();
+    }
+
+    private void threadProc() {
+        boolean connectFailedLastTime = false;
+        boolean signInFailedLastTime = false;
+        try {
+            while (true) {
+                if (!connectToServer()) {
+                    if (!connectFailedLastTime) {
+                        GUI.sendUserErrorMsg("Disconnected");
+                    }
+                    connectFailedLastTime = true;
+                    Thread.sleep(5000);
+                    continue;
+                }
+                connectFailedLastTime = false;
+
+                if (!signIn()) {
+                    if (!signInFailedLastTime) {
+                        GUI.sendUserErrorMsg("Bad login or password");
+                    }
+                    signInFailedLastTime = true;
+                    Thread.sleep(5000);
+                    continue;
+                }
+                signInFailedLastTime = false;
+
+                GUI.sendUserInformMsg("Connected");
+                listenToServer();
+            }
+        } catch(InterruptedException ignored) {
+        }
     }
 
     private boolean connectToServer() {
-        String host = App.properties.getServerAddress();
-        int port = App.properties.getServerPort();
+        String host = App.PROPERTIES.getServerAddress();
+        int port = App.PROPERTIES.getServerPort();
 
         System.out.println("Trying to connect to server (" + host + ":" + port + ")");
         try {
             socket = new Socket(host, port);
             if (!socket.isConnected()) {
                 System.out.println("Failed to connect");
+                socket.close();
                 return false;
             }
             socket.setTcpNoDelay(true);
@@ -49,32 +89,28 @@ public class Streamer implements Runnable {
         }
     }
 
-    private void reconnectToServer() {
-        GUI.sendUserWarningMsg("Reconnecting");
-        boolean connected = false;
-        while (!connected){
-            connected = connectToServer();
-            if(!connected){
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            else GUI.sendUserInformMsg("Connected");
-        }
-        if(!signIn()) {
-            GUI.sendUserErrorMsg("Bad login or password");
-            disconnect();
-        }
-    }
+//    private void reconnectToServer() {
+//        GUI.sendUserWarningMsg("Reconnecting");
+//        boolean connected = false;
+//        while (!connected) {
+//            connected = connectToServer();
+//            if (!connected) {
+//                try {
+//                    Thread.sleep(5000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            } else GUI.sendUserInformMsg("Connected");
+//        }
+//        if (!signIn()) {
+//            GUI.sendUserErrorMsg("Bad login or password");
+//            disconnect();
+//        }
+//    }
 
-    public static void disconnect() {
+    public void disconnect() {
         try {
-            outputStream.close();
-            inputStream.close();
             socket.close();
-            stopWorking = true;
             GUI.sendUserErrorMsg("Disconnected");
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,30 +118,44 @@ public class Streamer implements Runnable {
     }
 
     private boolean signIn() {
-        String login = App.properties.getLogin();
-        String password = App.properties.getPassword();
+        String login = App.PROPERTIES.getLogin();
+        String password = App.PROPERTIES.getPassword();
 
         System.out.println("Trying to sign in");
         String authString = login + ":" + password;
         sendToServer(authString.getBytes());
-        String answer = new String(readFromServer());
+
+        byte[] bytes = readFromServer();
+        if(bytes == null)
+            return false;
+
+        String answer = new String(bytes);
         System.out.println(answer);
         return answer.equals("verified");
     }
 
     private void listenToServer() {
         while (!socket.isClosed()) {
-            String command = new String(readFromServer());
-            if(stopWorking) return;
+            byte[] bytes = readFromServer();
+            if(bytes == null)
+                return;
+
+            String command = new String(bytes);
             switch (command) {
-                case "screenshot": sendToServer(takeScreenshot()); break;
-                case "checkup": sendToServer("connected".getBytes()); break;
-                case "": reconnectToServer(); break;
+                case "screenshot":
+                    sendToServer(takeScreenshot());
+                    break;
+                case "checkup":
+                    sendToServer("connected".getBytes());
+                    break;
+//                case "":
+//                    reconnectToServer();
+//                    break;
             }
         }
     }
 
-    public byte[] takeScreenshot() {
+    private byte[] takeScreenshot() {
         try {
             return ScreenshotMaker.takeScreenshot();
         } catch (IOException e) {
@@ -129,11 +179,11 @@ public class Streamer implements Runnable {
         try {
             int size = inputStream.readInt();
             byte[] data = new byte[size];
-            inputStream.read(data);
+            inputStream.read(data, 0, size);
             return data;
         } catch (IOException e) {
             e.printStackTrace();
-            return new byte[0];
+            return null;
         }
     }
 }

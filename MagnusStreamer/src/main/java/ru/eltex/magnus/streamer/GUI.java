@@ -27,7 +27,7 @@ public class GUI extends JFrame {
     private JTextField portField;
     private JTextField loginField;
     private JTextField passwordField;
-    private JButton connectButton;
+    private JButton okButton;
     private JButton disconnectButton;
 
     public static void init() {
@@ -139,18 +139,18 @@ public class GUI extends JFrame {
         add(passwordField);
 
         add(new JLabel("    "));
-        connectButton = new JButton("Connect");
-        connectButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
-        connectButton.addActionListener(actionEvent-> {
+        okButton = new JButton("OK");
+        okButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
+        okButton.addActionListener(actionEvent-> {
             setItemsEnabled(false);
-            createStreamer();
+            updateProperties();
         });
-        add(connectButton);
+        add(okButton);
 
         disconnectButton = new JButton("Disconnect");
         disconnectButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
         disconnectButton.setVisible(false);
-        disconnectButton.addActionListener(actionEvent -> Streamer.disconnect());
+        disconnectButton.addActionListener(actionEvent -> App.STREAMER.disconnect());
         add(disconnectButton);
     }
 
@@ -160,11 +160,11 @@ public class GUI extends JFrame {
         loginField.setEnabled(value);
         passwordField.setEnabled(value);
 
-        connectButton.setVisible(value);
+        okButton.setVisible(value);
         disconnectButton.setVisible(!value);
     }
 
-    private void createStreamer() {
+    private void updateProperties() {
         String host = hostField.getText();
         String port = portField.getText();
         String login = loginField.getText();
@@ -175,14 +175,12 @@ public class GUI extends JFrame {
             return;
         }
 
-        App.properties.setServerAddress(host);
-        App.properties.setServerPort(Integer.parseInt(port));
-        App.properties.setLogin(login);
-        App.properties.setPassword(password);
+        App.PROPERTIES.setServerAddress(host);
+        App.PROPERTIES.setServerPort(Integer.parseInt(port));
+        App.PROPERTIES.setLogin(login);
+        App.PROPERTIES.setPassword(password);
 
-        Thread stream = new Thread(App.streamer);
-        stream.setDaemon(true);
-        stream.start();
+        App.STREAMER.onPropertiesUpdated();
     }
 
     private void displayMsg(String msg, MessageType type) {
