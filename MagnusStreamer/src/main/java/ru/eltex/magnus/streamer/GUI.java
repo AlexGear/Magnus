@@ -5,6 +5,7 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.InetAddress;
 import javax.imageio.*;
 import javax.swing.*;
 
@@ -12,8 +13,8 @@ import static javax.swing.JOptionPane.*;
 
 public class GUI extends JFrame {
 
-    private static final int WINDOW_H = 280;
-    private static final int WINDOW_W = 200;
+    private static final int WINDOW_H = 300;
+    private static final int WINDOW_W = 300;
 
     private static GUI instance;
 
@@ -173,18 +174,30 @@ public class GUI extends JFrame {
     }
 
     private void updateProperties() {
-        String host = hostField.getText();
-        String port = portField.getText();
-        String login = loginField.getText();
-        String password = passwordField.getText();
+        String host = hostField.getText().trim();
+        String portStr = portField.getText().trim();
+        String login = loginField.getText().trim();
+        String password = passwordField.getText().trim();
 
-        if (host.isEmpty() || port.isEmpty() || login.isEmpty() || password.isEmpty()) {
-            sendUserErrorMsg("Failed, fill all fields");
+        if (host.isEmpty() || portStr.isEmpty() || login.isEmpty() || password.isEmpty()) {
+            errorMsg("Please, fill all the fields");
+            return;
+        }
+
+        int port = 0;
+        try {
+            port = Integer.parseInt(portStr);
+        } catch (NumberFormatException e) {
+            errorMsg("Port must be a number");
+            return;
+        }
+        if(port < 0 || port > 65535) {
+            errorMsg("Port must be in range from 0 to 65535");
             return;
         }
 
         App.PROPERTIES.setServerAddress(host);
-        App.PROPERTIES.setServerPort(Integer.parseInt(port));
+        App.PROPERTIES.setServerPort(port);
         App.PROPERTIES.setLogin(login);
         App.PROPERTIES.setPassword(password);
         App.PROPERTIES.save();
