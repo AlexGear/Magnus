@@ -8,13 +8,14 @@ public class App {
     public static final Streamer streamer = new Streamer();
 
     public static void main(String[] args) {
-        new GUI();
+        GUI.init();
         if (!properties.loadFromFile(PROPERTIES_FILE_PATH)) {
             GUI.sendUserErrorMsg("Can't load properties");
             return;
         }
 
         Thread stream = new Thread(streamer);
+        stream.setDaemon(true);
         stream.start();
     }
 }

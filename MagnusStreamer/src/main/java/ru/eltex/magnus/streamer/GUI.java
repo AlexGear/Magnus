@@ -8,43 +8,64 @@ import java.io.*;
 import javax.imageio.*;
 import javax.swing.*;
 
+import static javax.swing.JOptionPane.*;
+
 public class GUI extends JFrame {
 
     private static final int WINDOW_H = 280;
     private static final int WINDOW_W = 200;
 
-    private static TrayIcon trayIcon;
-    private static SystemTray systemTray;
-    private static BufferedImage normalIcon;
-    private static BufferedImage warningIcon;
-    private static BufferedImage errorIcon;
+    private static GUI instance;
 
-    private static JLabel status;
-    private static JTextField hostField;
-    private static JTextField portField;
-    private static JTextField loginField;
-    private static JTextField passwordField;
-    private static JButton connectButton;
-    private static JButton disconnectButton;
+    private TrayIcon trayIcon;
+    private BufferedImage normalIcon;
+    private BufferedImage warningIcon;
+    private BufferedImage errorIcon;
 
-    public GUI() {
+    private JLabel status;
+    private JTextField hostField;
+    private JTextField portField;
+    private JTextField loginField;
+    private JTextField passwordField;
+    private JButton connectButton;
+    private JButton disconnectButton;
+
+    public static void init() {
+        if(instance == null) {
+            instance = new GUI();
+        }
+    }
+
+    public static void sendUserErrorMsg(String msg) {
+        instance.errorMsg(msg);
+    }
+
+    public static void sendUserWarningMsg(String msg){
+        instance.warningMsg(msg);
+    }
+
+    public static void sendUserInformMsg(String msg){
+        instance.informMsg(msg);
+    }
+
+    private GUI() {
         super("Magnus");
 
         loadIcons();
         fillWindowContent();
         setWindowSettings();
-        setTraySettings();
 
         try {
-            systemTray = SystemTray.getSystemTray();
-            systemTray.add(trayIcon);
-        } catch (AWTException e) {
-            e.printStackTrace();
+            createTrayIcon();
+        } catch (AWTException | UnsupportedOperationException e) {
+            String message = "Failed to create tray icon: " + e.toString();
+            showMessageDialog(this, message,"Tray icon creation error", ERROR_MESSAGE);
+            dispose();
+            throw new RuntimeException(message, e);
         }
-
     }
 
-    private void loadIcons(){
+    private void loadIcons() {
         try {
             normalIcon = ImageIO.read(new File("normalIcon.jpg"));
             warningIcon = ImageIO.read(new File("warningIcon.jpg"));
@@ -54,7 +75,7 @@ public class GUI extends JFrame {
         }
     }
 
-    private void setTraySettings() {
+    private void createTrayIcon() throws AWTException {
         trayIcon = new TrayIcon(normalIcon);
         trayIcon.setImageAutoSize(true);
         trayIcon.addActionListener(actionEvent -> {
@@ -71,6 +92,8 @@ public class GUI extends JFrame {
             }
         };
         trayIcon.addMouseMotionListener(mouM);
+        SystemTray systemTray = SystemTray.getSystemTray();
+        systemTray.add(trayIcon);
     }
 
     private void setWindowSettings() {
@@ -128,7 +151,7 @@ public class GUI extends JFrame {
         add(disconnectButton);
     }
 
-    private static void setItemsEnabled(boolean value) {
+    private void setItemsEnabled(boolean value) {
         hostField.setEnabled(value);
         portField.setEnabled(value);
         loginField.setEnabled(value);
@@ -155,10 +178,11 @@ public class GUI extends JFrame {
         App.properties.setPassword(password);
 
         Thread stream = new Thread(App.streamer);
+        stream.setDaemon(true);
         stream.start();
     }
 
-    private static void displayMsg(String msg, MessageType type) {
+    private void displayMsg(String msg, MessageType type) {
         status.setText(msg);
 
         BufferedImage icon = normalIcon;
@@ -172,17 +196,17 @@ public class GUI extends JFrame {
         status.setForeground(color);
     }
 
-    public static void sendUserErrorMsg(String msg){
+    private void errorMsg(String msg) {
         trayIcon.displayMessage("", msg, MessageType.ERROR);
         displayMsg(msg, MessageType.ERROR);
         setItemsEnabled(true);
     }
 
-    public static void sendUserWarningMsg(String msg){
-        displayMsg(msg, MessageType.WARNING);
+    private void warningMsg(String msg) {
+        instance.displayMsg(msg, MessageType.WARNING);
     }
 
-    public static void sendUserInformMsg(String msg){
+    private void informMsg(String msg) {
         displayMsg(msg, MessageType.INFO);
     }
 }
