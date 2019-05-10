@@ -42,3 +42,5 @@ MagnusStreamer/.gradletasknamecache
 MagnusStreamer/out/*
 MagnusStreamer/.idea/*
 MagnusStreamer/*.iml
+
+MagnusStreamer/magnus.properties
