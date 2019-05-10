@@ -19,12 +19,6 @@ public class Streamer {
         startThread();
     }
 
-    private void startThread() {
-        thread = new Thread(this::threadProc);
-        thread.setDaemon(true);
-        thread.start();
-    }
-
     public void onPropertiesUpdated() {
         if(thread == null) {
             System.out.println("Streamer is not initialized");
@@ -32,6 +26,12 @@ public class Streamer {
         }
         thread.interrupt();
         startThread();
+    }
+
+    private void startThread() {
+        thread = new Thread(this::threadProc);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void threadProc() {
@@ -89,25 +89,6 @@ public class Streamer {
         }
     }
 
-//    private void reconnectToServer() {
-//        GUI.sendUserWarningMsg("Reconnecting");
-//        boolean connected = false;
-//        while (!connected) {
-//            connected = connectToServer();
-//            if (!connected) {
-//                try {
-//                    Thread.sleep(5000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            } else GUI.sendUserInformMsg("Connected");
-//        }
-//        if (!signIn()) {
-//            GUI.sendUserErrorMsg("Bad login or password");
-//            disconnect();
-//        }
-//    }
-
     public void disconnect() {
         try {
             socket.close();
@@ -148,9 +129,6 @@ public class Streamer {
                 case "checkup":
                     sendToServer("connected".getBytes());
                     break;
-//                case "":
-//                    reconnectToServer();
-//                    break;
             }
         }
     }

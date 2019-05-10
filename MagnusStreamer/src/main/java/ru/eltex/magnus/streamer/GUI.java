@@ -27,7 +27,6 @@ public class GUI extends JFrame {
     private JTextField portField;
     private JTextField loginField;
     private JTextField passwordField;
-    //    private JButton disconnectButton;
 
     public static void init() {
         if(instance == null) {
@@ -39,7 +38,7 @@ public class GUI extends JFrame {
         instance.errorMsg(msg);
     }
 
-    public static void sendUserWarningMsg(String msg){
+    public static void sendUserWarningMsg(String msg) {
         instance.warningMsg(msg);
     }
 
@@ -146,12 +145,6 @@ public class GUI extends JFrame {
             }
         });
         add(saveButton);
-
-//        disconnectButton = new JButton("Disconnect");
-//        disconnectButton.setPreferredSize(new Dimension(WINDOW_W - 30, 30));
-//        disconnectButton.setVisible(false);
-//        disconnectButton.addActionListener(actionEvent -> App.STREAMER.disconnect());
-//        add(disconnectButton);
     }
 
     private void populateControlsUsingProperties() {
@@ -160,16 +153,6 @@ public class GUI extends JFrame {
         loginField.setText(App.PROPERTIES.getLogin());
         passwordField.setText(App.PROPERTIES.getPassword());
     }
-
-//    private void setItemsEnabled(boolean value) {
-//        hostField.setEnabled(value);
-//        portField.setEnabled(value);
-//        loginField.setEnabled(value);
-//        passwordField.setEnabled(value);
-//
-//        saveButton.setVisible(value);
-//        disconnectButton.setVisible(!value);
-//    }
 
     private boolean updateProperties() {
         String host = hostField.getText().trim();
@@ -226,7 +209,6 @@ public class GUI extends JFrame {
     private void errorMsg(String msg) {
         trayIcon.displayMessage("", msg, MessageType.ERROR);
         displayMsg(msg, MessageType.ERROR);
-//        setItemsEnabled(true);
     }
 
     private void warningMsg(String msg) {
