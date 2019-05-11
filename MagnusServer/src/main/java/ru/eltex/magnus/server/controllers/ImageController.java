@@ -1,7 +1,9 @@
-package ru.eltex.magnus.server.streamers;
+package ru.eltex.magnus.server.controllers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.eltex.magnus.server.streamers.StreamerRequester;
+import ru.eltex.magnus.server.streamers.StreamersServer;
 
 @RestController
 public class ImageController {
