@@ -1,4 +1,4 @@
-package ru.eltex.magnus.server;
+package ru.eltex.magnus.server.streamers;
 
 import java.awt.*;
 import java.io.*;

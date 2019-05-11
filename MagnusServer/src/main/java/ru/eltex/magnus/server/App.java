@@ -3,6 +3,7 @@ package ru.eltex.magnus.server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import ru.eltex.magnus.server.streamers.StreamersServer;
 
 import java.io.BufferedReader;
 import java.io.IOException;

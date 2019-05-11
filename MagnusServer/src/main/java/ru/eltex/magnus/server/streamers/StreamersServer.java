@@ -1,4 +1,4 @@
-package ru.eltex.magnus.server;
+package ru.eltex.magnus.server.streamers;
 
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;

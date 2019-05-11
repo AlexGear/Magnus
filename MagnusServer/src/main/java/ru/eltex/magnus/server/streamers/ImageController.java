@@ -1,4 +1,4 @@
-package ru.eltex.magnus.server;
+package ru.eltex.magnus.server.streamers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
