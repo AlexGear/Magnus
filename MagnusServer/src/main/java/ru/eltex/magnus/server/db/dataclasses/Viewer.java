@@ -2,13 +2,25 @@ package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
+/**
+ * Class containing a viewer's credential (login and password) and name
+ */
 public class Viewer {
     private String login;
     private String password;
     private String name;
 
+    /**
+     * Allocates a new {@link Viewer} object with null login, password and name
+     */
     public Viewer() { }
 
+    /**
+     * Allocates a new {@link Viewer} object with specified login, password and name
+     * @param login the viewer's login
+     * @param password the viewer's password
+     * @param name the viewer's name
+     */
     public Viewer(String login, String password, String name) {
         this.login = login;
         this.password = password;
@@ -52,5 +64,14 @@ public class Viewer {
     @Override
     public int hashCode() {
         return Objects.hash(login, password, name);
+    }
+
+    @Override
+    public String toString() {
+        return "Viewer{" +
+                "login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

@@ -2,12 +2,23 @@ package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
+/**
+ * Class containing information about department: id, name
+ */
 public class Department {
     private int id;
     private String name;
 
+    /**
+     * Allocates new {@link Department} object with id = 0 and name = null
+     */
     public Department() { }
 
+    /**
+     * Allocates new {@link Department} object with specified id and name
+     * @param id the id of the department
+     * @param name the name of the department
+     */
     public Department(int id, String name) {
         this.id = id;
         this.name = name;
@@ -41,5 +52,13 @@ public class Department {
     @Override
     public int hashCode() {
         return Objects.hash(id, name);
+    }
+
+    @Override
+    public String toString() {
+        return "Department{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

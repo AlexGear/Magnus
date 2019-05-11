@@ -2,6 +2,10 @@ package ru.eltex.magnus.server.db.dataclasses;
 
 import java.util.Objects;
 
+/**
+ * Class containing an employee's credential and personal information:
+ * login, password, name, {@link Department}, job name, phone number, email
+ */
 public class Employee {
     private String login;
     private String password;
@@ -84,5 +88,18 @@ public class Employee {
     @Override
     public int hashCode() {
         return Objects.hash(login, password, name, department, jobName, phoneNumber, email);
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "login='" + login + '\'' +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                ", department=" + department +
+                ", jobName='" + jobName + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                '}';
     }
 }
