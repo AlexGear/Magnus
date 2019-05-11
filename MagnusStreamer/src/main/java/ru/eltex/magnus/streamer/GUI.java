@@ -203,6 +203,7 @@ public class GUI extends JFrame {
         }
 
         trayIcon.setImage(icon);
+        icon.flush();
         status.setForeground(color);
     }
 
