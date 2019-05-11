@@ -1,24 +1,19 @@
 package ru.eltex.magnus.server;
 
-import ru.eltex.magnus.server.db.Database;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 
-import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.lang.String;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class StreamersServer {
     private static final int MAX_READ_BUFFER_SIZE = 2 << 10;
 
-    private static ArrayList<StreamerRequester> streamers;
+    private static final List<StreamerRequester> streamers = Collections.synchronizedList(new ArrayList<>());
 
     private static Thread thread;
 
@@ -29,21 +24,21 @@ public class StreamersServer {
         thread = new Thread(() -> {
             try (ServerSocket server = new ServerSocket(8081)) {
                 System.out.println("Server Started");
-                streamers = new ArrayList<>();
+                streamers.clear();
 
                 Thread updateStreamersThread = new Thread(StreamersServer::updateOnlineStreamersList);
                 updateStreamersThread.setDaemon(true);
                 updateStreamersThread.start();
 
                 while (!server.isClosed()) {
-                    System.out.println("Waiting for new client");
+                    System.out.println("Waiting for incoming connection...");
                     Socket uncheckedStreamer = server.accept();
                     uncheckedStreamer.setTcpNoDelay(true);
-                    System.out.println("New Client Connected");
+                    System.out.println("New client connected: " + uncheckedStreamer.toString());
 
-                    Thread signUpThread = new Thread(() -> waitingForStreamerSignUp(uncheckedStreamer));
-                    signUpThread.setDaemon(true);
-                    signUpThread.start();
+                    Thread signInThread = new Thread(() -> waitingForStreamerSignIn(uncheckedStreamer));
+                    signInThread.setDaemon(true);
+                    signInThread.start();
                 }
 
             } catch (IOException e) {
@@ -56,31 +51,33 @@ public class StreamersServer {
 
     public static StreamerRequester getStreamerReqByLogin(String login) {
         Optional<StreamerRequester> result = streamers.stream().filter(x -> x.getLogin().equals(login)).findFirst();
-        if (!result.isPresent()) {
-            return null;
-        }
-        return result.get();
+        return result.orElse(null);
     }
 
-    private static void waitingForStreamerSignUp(Socket streamer) {
+    private static void waitingForStreamerSignIn(Socket streamer) {
         try {
             DataInputStream inputStream = new DataInputStream(streamer.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(streamer.getOutputStream());
 
             byte[] bytes = readMessage(inputStream);
-            if (bytes == null) return;
+            if (bytes == null) {
+                streamer.close();
+                return;
+            }
 
             String authString = new String(bytes);
             String[] authArray = authString.split(":");
             boolean verified = checkAuthData(authArray);
-            System.out.println("Received auth data: " + authArray[0] + " " + authArray[1]);
 
             String answer;
             if (verified) {
-                streamers.add(new StreamerRequester(streamer, inputStream, outputStream, authArray[0]));
+                String login = authArray[0];
+                streamers.add(new StreamerRequester(streamer, inputStream, outputStream, login));
                 answer = "verified";
+                System.out.println("Authenticated successfully: " + login + " (" + streamer.toString() + ")");
             } else {
                 answer = "failed";
+                System.out.println("Authentication refused: " + streamer.toString());
             }
             outputStream.writeInt(answer.length());
             outputStream.write(answer.getBytes());
@@ -117,7 +114,25 @@ public class StreamersServer {
     private static void updateOnlineStreamersList() {
         try {
             while (true) {
-                streamers.removeIf(s -> !s.checkStreamerConnection());
+                System.out.println("Checking up online streamers. " + streamers.size() +
+                        " have been online by this moment");
+                synchronized (streamers) {
+                    Iterator<StreamerRequester> it = streamers.iterator();
+                    while(it.hasNext()) {
+                        StreamerRequester streamer = it.next();
+                        if (!streamer.checkConnection()) {
+                            System.out.println("Streamer disconnected: " + streamer.getLogin());
+                            try {
+                                streamer.close();
+                            } catch (IOException e) {
+                                System.out.println("Failed to close streamer connection");
+                                e.printStackTrace();
+                            }
+                            it.remove();
+                        }
+                    }
+                }
+                System.out.println(streamers.size() + " streamers are still online");
                 Thread.sleep(5000);
             }
         } catch (InterruptedException ignored) {

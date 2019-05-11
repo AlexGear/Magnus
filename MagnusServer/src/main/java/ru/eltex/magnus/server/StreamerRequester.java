@@ -6,9 +6,10 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 
-public class StreamerRequester {
+public class StreamerRequester implements Closeable {
 
     private static final int MAX_BUFFER_SIZE = 2 << 18;
+    private static final int CONNECTION_CHECK_RETRIES = 3;
 
     private Socket socket;
     private DataOutputStream outputStream;
@@ -38,30 +39,33 @@ public class StreamerRequester {
         }
     }
 
-    public boolean checkStreamerConnection() {
+    public boolean checkConnection() {
         try {
-            if (socket.isClosed()) return false;
-            String command = "checkup";
-            sendToStreamer(command.getBytes());
-            byte[] bytes = readFromStreamer();
-            return bytes != null && "connected".equals(new String(bytes));
+            if (socket.isClosed()) {
+                return false;
+            }
+            final String command = "checkup";
+            for (int i = 0; i < CONNECTION_CHECK_RETRIES; i++) {
+                sendToStreamer(command.getBytes());
+                byte[] bytes = readFromStreamer();
+                if (bytes != null && "connected".equals(new String(bytes))) {
+                    return true;
+                }
+            }
+            return false;
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("catched");
             return false;
         }
     }
 
-    private void sendToStreamer(byte[] data) throws IOException {
+    private synchronized void sendToStreamer(byte[] data) throws IOException {
         outputStream.writeInt(data.length);
-        outputStream.flush();
         outputStream.write(data);
         outputStream.flush();
     }
 
     private synchronized byte[] readFromStreamer() throws IOException {
         int size = inputStream.readInt();
-        System.out.println(size);
         if (size < 0 || size > MAX_BUFFER_SIZE) {
             System.err.println("Unacceptable message size: " + size);
             return null;
@@ -74,5 +78,10 @@ public class StreamerRequester {
             return null;
         }
         return buffer;
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
     }
 }
