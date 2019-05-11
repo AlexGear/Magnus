@@ -81,7 +81,12 @@ public class StreamerRequester implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
-        socket.close();
+    public void close() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("Failed to close streamer socket");
+            e.printStackTrace();
+        }
     }
 }

@@ -1,6 +1,7 @@
 package ru.eltex.magnus.server.db.dataclasses;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -23,12 +24,21 @@ public class OfflineStreamer {
 
     /**
      * Allocates a new {@link OfflineStreamer} object with specified login and lastSeen fields
-     * @param login the login of the streamer became online
+     * @param login the login of the streamer became offline
      * @param lastSeen the last time it was seen online
      */
     public OfflineStreamer(String login, Timestamp lastSeen) {
         this.login = login;
         this.lastSeen = lastSeen;
+    }
+
+    /**
+     * Creates a new {@link OfflineStreamer} object with specified login and lastSeen field set to current time
+     * @param login the login of the streamer became offline
+     * @return the created {@link OfflineStreamer} instance
+     */
+    public static OfflineStreamer forCurrentTime(String login) {
+        return new OfflineStreamer(login, Timestamp.from(Instant.now()));
     }
 
     public String getLogin() {
