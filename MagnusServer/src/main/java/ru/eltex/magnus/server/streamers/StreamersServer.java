@@ -1,5 +1,6 @@
 package ru.eltex.magnus.server.streamers;
 
+import ru.eltex.magnus.server.App;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
@@ -13,7 +14,7 @@ import java.util.*;
 public class StreamersServer {
     private static final int MAX_READ_BUFFER_SIZE = 2 << 10;
 
-    private static final List<StreamerRequester> streamers = Collections.synchronizedList(new ArrayList<>());
+    private static final List<StreamerRequester> STREAMERS = Collections.synchronizedList(new ArrayList<>());
 
     private static Thread thread;
 
@@ -22,9 +23,10 @@ public class StreamersServer {
             return;
         }
         thread = new Thread(() -> {
-            try (ServerSocket server = new ServerSocket(8081)) {
+            int port = getProperties().getServerPort();
+            try (ServerSocket server = new ServerSocket(port)) {
                 System.out.println("Server Started");
-                streamers.clear();
+                STREAMERS.clear();
 
                 Thread updateStreamersThread = new Thread(StreamersServer::updateOnlineStreamersList);
                 updateStreamersThread.setDaemon(true);
@@ -50,12 +52,16 @@ public class StreamersServer {
     }
 
     public static StreamerRequester getStreamerByLogin(String login) {
-        Optional<StreamerRequester> result = streamers.stream().filter(x -> x.getLogin().equals(login)).findFirst();
+        Optional<StreamerRequester> result = STREAMERS.stream().filter(x -> x.getLogin().equals(login)).findFirst();
         return result.orElse(null);
     }
 
     public static List<StreamerRequester> getAllStreamers() {
-        return Collections.unmodifiableList(streamers);
+        return Collections.unmodifiableList(STREAMERS);
+    }
+
+    private static StreamersServerProperties getProperties() {
+        return App.PROPERTIES;
     }
 
     private static void waitingForStreamerSignIn(Socket streamer) {
@@ -76,7 +82,7 @@ public class StreamersServer {
             String answer;
             if (verified) {
                 String login = authArray[0];
-                streamers.add(new StreamerRequester(streamer, inputStream, outputStream, login));
+                STREAMERS.add(new StreamerRequester(streamer, inputStream, outputStream, login));
                 answer = "verified";
                 System.out.println("Authenticated successfully: " + login + " (" + streamer.toString() + ")");
             } else {
@@ -118,10 +124,10 @@ public class StreamersServer {
     private static void updateOnlineStreamersList() {
         try {
             while (true) {
-                System.out.println("Checking up online streamers. " + streamers.size() +
+                System.out.println("Checking up online streamers. " + STREAMERS.size() +
                         " have been online by this moment");
-                synchronized (streamers) {
-                    Iterator<StreamerRequester> it = streamers.iterator();
+                synchronized (STREAMERS) {
+                    Iterator<StreamerRequester> it = STREAMERS.iterator();
                     while(it.hasNext()) {
                         StreamerRequester streamer = it.next();
                         if (!streamer.checkConnection()) {
@@ -136,7 +142,7 @@ public class StreamersServer {
                         }
                     }
                 }
-                System.out.println(streamers.size() + " streamers are still online");
+                System.out.println(STREAMERS.size() + " streamers are still online");
                 Thread.sleep(5000);
             }
         } catch (InterruptedException ignored) {

@@ -1,8 +1,7 @@
 package ru.eltex.magnus.server.db;
 
+import ru.eltex.magnus.server.App;
 import ru.eltex.magnus.server.db.storages.*;
-
-import java.io.IOException;
 
 /**
  * Class providing access to different storages:
@@ -15,32 +14,10 @@ import java.io.IOException;
  * </ul>
  */
 public class StoragesProvider {
-    private static final String DEFAULT_PROPERTIES_FILENAME = "magnus.properties";
-    private static final Database DATABASE_INSTANCE;
+    private static final Database DATABASE_INSTANCE = new Database(getDatabaseProperties());
 
-    static {
-        String propertiesFilename = getPropertiesFilename();
-        try {
-            DatabaseProperties properties = new DatabaseFileProperties(propertiesFilename);
-            DATABASE_INSTANCE = new Database(properties);
-        } catch (IOException e) {
-            String msg = "Failed to load DB properties from '" + propertiesFilename + "'";
-            throw new Error(msg, e);
-        }
-    }
-
-    /**
-     * Gets the filename of the properties file. If 'propertiesFile' system property
-     * is not empty then its value returned, otherwise returns
-     * the default value {@value DEFAULT_PROPERTIES_FILENAME}
-     * @return the filename of the properties file
-     */
-    private static String getPropertiesFilename() {
-        String filename = System.getProperty("propertiesFile");
-        if(filename != null && !filename.isEmpty()) {
-            return filename;
-        }
-        return DEFAULT_PROPERTIES_FILENAME;
+    private static DatabaseProperties getDatabaseProperties() {
+        return App.PROPERTIES;
     }
 
     /**

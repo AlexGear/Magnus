@@ -11,6 +11,33 @@ import java.io.InputStreamReader;
 
 @SpringBootApplication
 public class App {
+    private static final String DEFAULT_PROPERTIES_FILENAME = "magnus.properties";
+    public static final AppProperties PROPERTIES;
+
+    static {
+        String propertiesFilename = getPropertiesFilename();
+        try {
+            PROPERTIES = new AppProperties(propertiesFilename);
+        } catch (IOException e) {
+            String msg = "Failed to load properties from '" + propertiesFilename + "'";
+            throw new Error(msg, e);
+        }
+    }
+
+    /**
+     * Gets the filename of the properties file. If 'propertiesFile' system property
+     * is not empty then its value returned, otherwise returns
+     * the default value {@value DEFAULT_PROPERTIES_FILENAME}
+     * @return the filename of the properties file
+     */
+    private static String getPropertiesFilename() {
+        String filename = System.getProperty("propertiesFile");
+        if(filename != null && !filename.isEmpty()) {
+            return filename;
+        }
+        return DEFAULT_PROPERTIES_FILENAME;
+    }
+
     public static void main(String[] args) throws IOException {
         ApplicationContext context = SpringApplication.run(App.class, args);
         System.setProperty("java.awt.headless", "false");
