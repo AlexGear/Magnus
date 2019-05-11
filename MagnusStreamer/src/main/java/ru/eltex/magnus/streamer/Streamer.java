@@ -24,8 +24,14 @@ public class Streamer {
             System.out.println("Streamer is not initialized");
             return;
         }
-        thread.interrupt();
-        startThread();
+        if(socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.err.println("Failed to close socket");
+                e.printStackTrace();
+            }
+        }
     }
 
     private void startThread() {
@@ -62,7 +68,8 @@ public class Streamer {
                 GUI.sendUserInformMsg("Connected");
                 listenToServer();
             }
-        } catch(InterruptedException ignored) {
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -72,6 +79,12 @@ public class Streamer {
 
         System.out.println("Trying to connect to server (" + host + ":" + port + ")");
         try {
+            try {
+                if(socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ignored) { }
+
             socket = new Socket(host, port);
             if (!socket.isConnected()) {
                 System.out.println("Failed to connect");
