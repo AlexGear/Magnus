@@ -1,5 +1,7 @@
 package ru.eltex.magnus.server.streamers;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.eltex.magnus.server.App;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -15,6 +17,8 @@ public class StreamersServer {
     private static final int MAX_READ_BUFFER_SIZE = 2 << 10;
 
     private static final List<StreamerRequester> STREAMERS = Collections.synchronizedList(new ArrayList<>());
+
+    private static final PasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     private static Thread thread;
 
@@ -115,10 +119,16 @@ public class StreamersServer {
 
     private static boolean checkAuthData(String[] authArray) {
         if (authArray.length != 2) return false;
+
         EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
-        Employee employee = storage.getEmployeeByLogin(authArray[0]);
+
+        String login = authArray[0];
+        String password = authArray[1];
+
+        Employee employee = storage.getEmployeeByLogin(login);
         if (employee == null) return false;
-        return employee.getPassword().equals(authArray[1]);
+
+        return PASSWORD_ENCODER.matches(password, employee.getPassword());
     }
 
     private static void updateOnlineStreamersList() {

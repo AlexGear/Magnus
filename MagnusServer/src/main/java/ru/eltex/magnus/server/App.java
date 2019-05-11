@@ -3,6 +3,10 @@ package ru.eltex.magnus.server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import ru.eltex.magnus.server.db.StoragesProvider;
+import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 import ru.eltex.magnus.server.streamers.StreamersServer;
 
 import java.io.BufferedReader;
@@ -39,6 +43,12 @@ public class App {
     }
 
     public static void main(String[] args) throws IOException {
+//        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
+//        for(Employee e: storage.getAllEmployees()) {
+//            e.setPassword(new BCryptPasswordEncoder().encode(e.getPassword()));
+//            storage.updateEmployee(e);
+//        }
+
         ApplicationContext context = SpringApplication.run(App.class, args);
         System.setProperty("java.awt.headless", "false");
         StreamersServer.start();
