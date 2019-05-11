@@ -49,9 +49,13 @@ public class StreamersServer {
         thread.start();
     }
 
-    public static StreamerRequester getStreamerReqByLogin(String login) {
+    public static StreamerRequester getStreamerByLogin(String login) {
         Optional<StreamerRequester> result = streamers.stream().filter(x -> x.getLogin().equals(login)).findFirst();
         return result.orElse(null);
+    }
+
+    public static List<StreamerRequester> getAllStreamers() {
+        return Collections.unmodifiableList(streamers);
     }
 
     private static void waitingForStreamerSignIn(Socket streamer) {
