@@ -192,6 +192,15 @@ public class GUI extends JFrame {
         return true;
     }
 
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            revalidate();
+            repaint();
+        }
+    }
+
     private void displayMsg(String msg, MessageType type) {
         status.setText(msg);
 
