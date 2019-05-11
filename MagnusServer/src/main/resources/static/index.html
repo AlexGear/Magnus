@@ -1,40 +1,61 @@
 <html>
 <head>
-    <title>PhoneBook</title>
-    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
+    <title>Magnus</title>
     <script src="jquery.js"></script>
     <script>
-	    var canvas = document.createElement("canvas");
-		$(document).ready(function() {
-			$("#imagecontainer").html('<img id="image" height="600px">');
-			loadImage();
-			$("#button").click(loadImage);
-			setInterval(loadImage, 300);
-		});
-		function loadImage() {
-			$.ajax({
-		        url: 'screenshot',
-		        cache:false,
-		        xhr:function(){// Seems like the only way to get access to the xhr object
-		            var xhr = new XMLHttpRequest();
-		            xhr.responseType= 'blob'
-		            return xhr;
-		        },
-		        success: function(data){
-		            var img = document.getElementById('image');
-		            var url = window.URL || window.webkitURL;
-		            img.src = url.createObjectURL(data);
-		        },
-		        error:function(){
+        var streamersData;
 
-		        }
-		    });
-		}
+        $(document).ready(onReady);
+
+        function onReady() {
+            $.ajax({
+				type: 'GET',
+				dataType: 'json',
+				url: '/get_streamers_list',
+				success: function(data) {
+                    console.log(data);
+					onObtainedStreamersInfo(data);
+				}
+			});
+        }
+
+        function onObtainedStreamersInfo(data) {
+            streamersData = data;
+
+            let onlineTable = document.getElementById("onlineTable");
+            $(onlineTable).children().remove();
+            let i = 0;
+            for(const streamer of data.onlineStreamers) {
+                addRow(onlineTable, i, streamer);
+                i++
+            }
+
+            i = 0;
+            let offlineTable = document.getElementById("offlineTable");
+            $(offlineTable).children().remove();
+            for(const streamer of data.offlineStreamers) {
+                addRow(offlineTable, i, streamer.streamerInfo, "(Last seen: " + streamer.lastSeen + ")");
+                i++;
+            }
+        }
+
+        function addRow(table, i, streamer, additionalInfo) {
+            let row = table.insertRow(i);
+            let cell = row.insertCell(0);
+            cell.innerHTML = "<u>" + streamer.name + "</u> " + (additionalInfo != undefined ? additionalInfo : "");
+            cell.onclick = function() {
+                let container = document.getElementById("currentStreamer");
+                container.innertHTML = streamer.login + "\n" + streamer.name + "\n" + streamer.department + "\n" + 
+                    streamer.jobName + "\n" + streamer.phoneNumber + "\n" + streamer.email;
+            };
+        }
 	</script>
 </head>
 <body>
-<div id="imagecontainer"></div>
-<button id="button">Take Screenshot</button>
-<div id="phonebook"></div>
+    <div>Online:</div>
+    <table id="onlineTable"></table>
+    <div>Offline:</div>
+    <table id="offlineTable"></table>
+    <div id="currentStreamer"></div>
 </body>
 </html>
