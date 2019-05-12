@@ -93,8 +93,8 @@ public class Streamer {
             }
             socket.setTcpNoDelay(true);
             System.out.println("Successfully connected");
-            inputStream = new DataInputStream(socket.getInputStream());
-            outputStream = new DataOutputStream(socket.getOutputStream());
+            inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            outputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             return true;
         } catch (IOException e) {
             System.out.println("Failed to connect");

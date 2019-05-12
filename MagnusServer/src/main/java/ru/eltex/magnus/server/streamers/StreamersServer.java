@@ -71,8 +71,8 @@ public class StreamersServer {
 
     private static void waitingForStreamerSignIn(Socket socket) {
         try {
-            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            DataInputStream inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
             byte[] bytes = readMessage(inputStream);
             if (bytes == null) {
