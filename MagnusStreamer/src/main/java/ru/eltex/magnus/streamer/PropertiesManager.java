@@ -1,5 +1,8 @@
 package ru.eltex.magnus.streamer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,6 +16,8 @@ public class PropertiesManager {
     private static final String LOGIN_PROPERTY = "user.login";
     private static final String PASSWORD_PROPERTY = "user.password";
 
+    private static final Logger LOG = LogManager.getLogger(PropertiesManager.class);
+
     private final String fileName;
     private String serverAddress;
     private int serverPort;
@@ -24,11 +29,13 @@ public class PropertiesManager {
     }
 
     public boolean load() {
+        LOG.info("Loading properties from '" + fileName + "'");
+
         Properties prop = new Properties();
         try (FileReader reader = new FileReader(fileName)) {
             prop.load(reader);
         } catch (IOException e) {
-            System.out.println("Failed to read config file: " + fileName);
+            LOG.warn("Failed to read config file '" + fileName + "': " + e.toString());
             return false;
         }
         setServerAddress(prop.getProperty(SERVER_ADDRESS_PROPERTY, ""));
@@ -39,6 +46,8 @@ public class PropertiesManager {
     }
 
     public boolean save() {
+        LOG.info("Saving properties to '" + fileName + "'");
+
         Properties prop = new Properties();
         prop.setProperty(SERVER_ADDRESS_PROPERTY, getServerAddress());
         prop.setProperty(SERVER_PORT_PROPERTY, String.valueOf(getServerPort()));
@@ -48,7 +57,7 @@ public class PropertiesManager {
         try (FileWriter writer = new FileWriter(fileName)) {
             prop.store(writer, "");
         } catch (IOException e) {
-            System.out.println("Failed to write config file: " + fileName);
+            LOG.warn("Failed to write config file '" + fileName + "': " + e.toString());
             return false;
         }
         return true;
