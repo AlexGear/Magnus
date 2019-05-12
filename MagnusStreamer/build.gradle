@@ -3,6 +3,9 @@ apply plugin: 'application'
 //apply plugin: 'findbugs'
 mainClassName='ru.eltex.magnus.streamer.App'
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 run {
     standardInput = System.in
 }
