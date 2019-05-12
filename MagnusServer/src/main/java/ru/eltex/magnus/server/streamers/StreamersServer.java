@@ -35,8 +35,9 @@ public class StreamersServer {
         }
         thread = new Thread(() -> {
             int port = getProperties().getServerPort();
+            LOG.info("Starting StreamersServer on port " + port);
             try (ServerSocket server = new ServerSocket(port)) {
-                LOG.info("Server Started");
+                LOG.info("StreamersServer Started");
                 STREAMERS.clear();
 
                 Thread updateStreamersThread = new Thread(StreamersServer::updateOnlineStreamersList);
@@ -126,7 +127,7 @@ public class StreamersServer {
         byte[] buffer = new byte[size];
         int actualSize = inputStream.read(buffer, 0, size);
         if (size != actualSize) {
-            LOG.warn("Expected " + size + "bytes but got " + actualSize);
+            LOG.warn("Expected " + size + "bytes but got " + actualSize + ". Skipping this message");
             return null;
         }
         return buffer;

@@ -41,10 +41,13 @@ public class App {
      * @return the filename of the properties file
      */
     private static String getPropertiesFilename() {
-        String filename = System.getProperty("propertiesFile");
+        final String systemProperty = "propertiesFile";
+        String filename = System.getProperty(systemProperty);
         if(filename != null && !filename.isEmpty()) {
+            LOG.info("System property 'propertiesFile'='" + filename + "'. Using it.");
             return filename;
         }
+        LOG.info("System property 'propertiesFile' not set. Using default filename: " + DEFAULT_PROPERTIES_FILENAME + "'");
         return DEFAULT_PROPERTIES_FILENAME;
     }
 
