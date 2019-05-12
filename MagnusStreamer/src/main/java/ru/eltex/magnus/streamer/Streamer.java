@@ -1,16 +1,24 @@
 package ru.eltex.magnus.streamer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.net.Socket;
 
 
 public class Streamer {
+    private static final Logger LOG = LogManager.getLogger(Streamer.class);
+
+    private enum SignInResult { VERIFIED, FAILED, OCCUPIED }
 
     private Socket socket;
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
 
     private Thread thread;
+    private volatile boolean lastConnectResult;
+    private volatile SignInResult lastSignInResult;
 
     public void init() {
         if(thread != null) {
@@ -21,17 +29,22 @@ public class Streamer {
 
     public void onPropertiesUpdated() {
         if(thread == null) {
-            System.out.println("Streamer is not initialized");
+            LOG.warn("Streamer is not initialized");
             return;
         }
         if(socket != null) {
             try {
                 socket.close();
             } catch (IOException e) {
-                System.err.println("Failed to close socket");
-                e.printStackTrace();
+                LOG.warn("Failed to close socket: " + e.toString());
             }
         }
+        makeGUIMessagesShowNextTime();
+    }
+
+    private void makeGUIMessagesShowNextTime() {
+        lastConnectResult = true;
+        lastSignInResult = SignInResult.VERIFIED;
     }
 
     private void startThread() {
@@ -41,29 +54,34 @@ public class Streamer {
     }
 
     private void threadProc() {
-        boolean connectFailedLastTime = false;
-        boolean signInFailedLastTime = false;
+        LOG.info("Streamer thread started");
+
+        makeGUIMessagesShowNextTime();
         try {
             while (true) {
                 if (!connectToServer()) {
-                    if (!connectFailedLastTime) {
+                    if (lastConnectResult) {
                         GUI.sendUserErrorMsg("Disconnected");
                     }
-                    connectFailedLastTime = true;
+                    lastConnectResult = false;
                     Thread.sleep(5000);
                     continue;
                 }
-                connectFailedLastTime = false;
+                lastConnectResult = true;
 
-                if (!signIn()) {
-                    if (!signInFailedLastTime) {
-                        GUI.sendUserErrorMsg("Bad login or password");
+                SignInResult signInResult = signIn();
+                if (SignInResult.VERIFIED != signInResult) {
+                    if (lastSignInResult != signInResult) {
+                        switch(signInResult) {
+                            case FAILED: GUI.sendUserErrorMsg("Bad login or password"); break;
+                            case OCCUPIED: GUI.sendUserErrorMsg("This user is already signed in"); break;
+                        }
+                        lastSignInResult = signInResult;
                     }
-                    signInFailedLastTime = true;
                     Thread.sleep(5000);
                     continue;
                 }
-                signInFailedLastTime = false;
+                lastSignInResult = signInResult;
 
                 GUI.sendUserInformMsg("Connected");
                 listenToServer();
@@ -77,27 +95,29 @@ public class Streamer {
         String host = App.PROPERTIES.getServerAddress();
         int port = App.PROPERTIES.getServerPort();
 
-        System.out.println("Trying to connect to server (" + host + ":" + port + ")");
+       LOG.debug("Trying to connect to server (" + host + ":" + port + ")");
         try {
             try {
                 if(socket != null) {
                     socket.close();
                 }
-            } catch (IOException ignored) { }
+            } catch (IOException e) {
+                LOG.warn("Failed to close previous connection: " + e.toString());
+            }
 
             socket = new Socket(host, port);
             if (!socket.isConnected()) {
-                System.out.println("Failed to connect");
+                LOG.debug("Failed to connect");
                 socket.close();
                 return false;
             }
             socket.setTcpNoDelay(true);
-            System.out.println("Successfully connected");
+            LOG.info("Successfully connected");
             inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             outputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             return true;
         } catch (IOException e) {
-            System.out.println("Failed to connect");
+            LOG.debug("Failed to connect: " + e.toString());
             return false;
         }
     }
@@ -107,32 +127,40 @@ public class Streamer {
             socket.close();
             GUI.sendUserErrorMsg("Disconnected");
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to disconnect:" + e.toString());
         }
     }
 
-    private boolean signIn() {
+    private SignInResult signIn() {
         String login = App.PROPERTIES.getLogin();
         String password = App.PROPERTIES.getPassword();
 
-        System.out.println("Trying to sign in");
+        LOG.info("Trying to sign in");
         String authString = login + ":" + password;
         sendToServer(authString.getBytes());
 
         byte[] bytes = readFromServer();
-        if(bytes == null)
-            return false;
+        if(bytes == null) {
+            LOG.warn("Failed to sign in: response bytes == null");
+            return SignInResult.FAILED;
+        }
 
         String answer = new String(bytes);
-        System.out.println(answer);
-        return answer.equals("verified");
+        LOG.info("Signing in: answer = '" + answer + "'");
+        switch(answer) {
+            case "verified": return SignInResult.VERIFIED;
+            case "occupied": return SignInResult.OCCUPIED;
+            default: return SignInResult.FAILED;
+        }
     }
 
     private void listenToServer() {
         while (!socket.isClosed()) {
             byte[] bytes = readFromServer();
-            if(bytes == null)
+            if(bytes == null) {
+                LOG.warn("Listening to server: bytes == null");
                 return;
+            }
 
             String command = new String(bytes);
             switch (command) {
@@ -150,7 +178,7 @@ public class Streamer {
         try {
             return ScreenshotMaker.takeScreenshot();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to take screenshot: " + e.toString());
             return new byte[0];
         }
     }
@@ -162,7 +190,7 @@ public class Streamer {
             outputStream.write(data);
             outputStream.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to send data (" + data.length + " bytes) to server: " + e.toString());
         }
     }
 
@@ -173,7 +201,7 @@ public class Streamer {
             inputStream.readFully(data, 0, size);
             return data;
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to read from server: " + e.toString());
             return null;
         }
     }

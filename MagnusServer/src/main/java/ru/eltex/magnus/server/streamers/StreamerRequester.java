@@ -1,5 +1,8 @@
 package ru.eltex.magnus.server.streamers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
@@ -10,6 +13,8 @@ public class StreamerRequester implements Closeable {
 
     private static final int MAX_BUFFER_SIZE = 2 << 18;
     private static final int CONNECTION_CHECK_RETRIES = 3;
+
+    private static final Logger LOG = LogManager.getLogger(StreamerRequester.class);
 
     private Socket socket;
     private DataOutputStream outputStream;
@@ -33,7 +38,7 @@ public class StreamerRequester implements Closeable {
             sendToStreamer(command.getBytes());
             return readFromStreamer();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to take screenshot from '" + login + "': " + e.toString());
             return null;
         }
     }
@@ -47,9 +52,15 @@ public class StreamerRequester implements Closeable {
             for (int i = 0; i < CONNECTION_CHECK_RETRIES; i++) {
                 sendToStreamer(command.getBytes());
                 byte[] bytes = readFromStreamer();
-                if (bytes != null && "connected".equals(new String(bytes))) {
+                if (bytes == null) {
+                    LOG.warn("Connection check for '" + login + "' (retry #" + i + ") failed: bytes == null");
+                    continue;
+                }
+                String response = new String(bytes);
+                if ("connected".equals(response)) {
                     return true;
                 }
+                LOG.warn("Connection check for '" + login + "' (retry #" + i + ") failed: response = '" + response + "'");
             }
             return false;
         } catch (IOException e) {
@@ -66,7 +77,7 @@ public class StreamerRequester implements Closeable {
     private synchronized byte[] readFromStreamer() throws IOException {
         int size = inputStream.readInt();
         if (size < 0 || size > MAX_BUFFER_SIZE) {
-            System.err.println("Unacceptable message size: " + size);
+            LOG.warn("Unacceptable message size: " + size);
             return null;
         }
 
@@ -80,8 +91,7 @@ public class StreamerRequester implements Closeable {
         try {
             socket.close();
         } catch (IOException e) {
-            System.err.println("Failed to close streamer socket");
-            e.printStackTrace();
+            LOG.warn("Failed to close streamer socket: " + e.toString());
         }
     }
 }

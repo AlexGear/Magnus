@@ -1,5 +1,7 @@
 package ru.eltex.magnus.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -16,6 +18,9 @@ import java.io.InputStreamReader;
 @SpringBootApplication
 public class App {
     private static final String DEFAULT_PROPERTIES_FILENAME = "magnus.properties";
+
+    private static final Logger LOG = LogManager.getLogger(App.class);
+
     public static final AppProperties PROPERTIES;
 
     static {
@@ -24,6 +29,7 @@ public class App {
             PROPERTIES = new AppProperties(propertiesFilename);
         } catch (IOException e) {
             String msg = "Failed to load properties from '" + propertiesFilename + "'";
+            LOG.fatal(msg);
             throw new Error(msg, e);
         }
     }
@@ -35,10 +41,13 @@ public class App {
      * @return the filename of the properties file
      */
     private static String getPropertiesFilename() {
-        String filename = System.getProperty("propertiesFile");
+        final String systemProperty = "propertiesFile";
+        String filename = System.getProperty(systemProperty);
         if(filename != null && !filename.isEmpty()) {
+            LOG.info("System property 'propertiesFile'='" + filename + "'. Using it.");
             return filename;
         }
+        LOG.info("System property 'propertiesFile' not set. Using default filename: " + DEFAULT_PROPERTIES_FILENAME + "'");
         return DEFAULT_PROPERTIES_FILENAME;
     }
 

@@ -1,5 +1,7 @@
 package ru.eltex.magnus.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.eltex.magnus.server.db.DatabaseProperties;
 import ru.eltex.magnus.server.streamers.StreamersServerProperties;
 
@@ -25,6 +27,8 @@ public class AppProperties implements DatabaseProperties, StreamersServerPropert
     private static final String PASSWORD_PROPERTY = "mysql.password";
     private static final String SERVER_PORT_PROPERTY = "server.port";
 
+    private static final Logger LOG = LogManager.getLogger(AppProperties.class);
+
     private final String connectionURL;
     private final String login;
     private final String password;
@@ -41,6 +45,8 @@ public class AppProperties implements DatabaseProperties, StreamersServerPropert
      */
     public AppProperties(String filename) throws IOException, NoSuchElementException,
             NumberFormatException, IllegalArgumentException {
+
+        LOG.info("Loading AppProperties from '" + filename + "'");
         try (FileReader reader = new FileReader(filename)) {
             Properties properties = new Properties();
             properties.load(reader);

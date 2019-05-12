@@ -1,5 +1,8 @@
 package ru.eltex.magnus.streamer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.awt.*;
 import java.awt.TrayIcon.MessageType;
 import java.awt.event.*;
@@ -14,6 +17,8 @@ public class GUI extends JFrame {
 
     private static final int WINDOW_H = 300;
     private static final int WINDOW_W = 270;
+
+    private static final Logger LOG = LogManager.getLogger(GUI.class);
 
     private static GUI instance;
 
@@ -49,6 +54,8 @@ public class GUI extends JFrame {
     private GUI() {
         super("Magnus");
 
+        LOG.info("Creating GUI instance");
+
         loadIcons();
         fillWindowContent();
         populateControlsUsingProperties();
@@ -59,6 +66,7 @@ public class GUI extends JFrame {
         } catch (AWTException | UnsupportedOperationException e) {
             String message = "Failed to create tray icon: " + e.toString();
             showMessageDialog(this, message,"Tray icon creation error", ERROR_MESSAGE);
+            LOG.error(message);
             dispose();
             throw new RuntimeException(message, e);
         }
@@ -70,7 +78,9 @@ public class GUI extends JFrame {
             warningIcon = ImageIO.read(new File("warningIcon.jpg"));
             errorIcon = ImageIO.read(new File("errorIcon.jpg"));
         } catch (IOException e) {
-            e.printStackTrace();
+            final String message = "Failed to load icon(s)";
+            LOG.error(message);
+            throw new RuntimeException(message, e);
         }
     }
 
@@ -217,15 +227,18 @@ public class GUI extends JFrame {
     }
 
     private void errorMsg(String msg) {
+        LOG.info("Displaying error message: " + msg);
         trayIcon.displayMessage("", msg, MessageType.ERROR);
         displayMsg(msg, MessageType.ERROR);
     }
 
     private void warningMsg(String msg) {
+        LOG.info("Displaying warning message: " + msg);
         displayMsg(msg, MessageType.WARNING);
     }
 
     private void informMsg(String msg) {
+        LOG.info("Displaying info message: " + msg);
         displayMsg(msg, MessageType.INFO);
     }
 }

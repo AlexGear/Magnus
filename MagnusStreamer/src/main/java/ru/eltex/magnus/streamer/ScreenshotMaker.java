@@ -1,5 +1,8 @@
 package ru.eltex.magnus.streamer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -11,13 +14,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 class ScreenshotMaker {
+    private static final Logger LOG = LogManager.getLogger(ScreenshotMaker.class);
     private static final Robot ROBOT = createRobot();
 
     private static Robot createRobot() {
         try {
             return new Robot();
         } catch (AWTException e) {
-            throw new UnsupportedOperationException("Failed to create Robot: " + e.toString(), e);
+            String message = "Failed to create Robot instance for screenshot making: " + e.toString();
+            LOG.fatal(message);
+            throw new UnsupportedOperationException(message, e);
         }
     }
 
