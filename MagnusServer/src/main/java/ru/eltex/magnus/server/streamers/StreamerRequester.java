@@ -71,11 +71,7 @@ public class StreamerRequester implements Closeable {
         }
 
         byte[] buffer = new byte[size];
-        int actualSize = inputStream.read(buffer, 0, size);
-        if (size != actualSize) {
-            System.err.println("Expected " + size + "bytes but got " + actualSize);
-            return null;
-        }
+        inputStream.readFully(buffer, 0, size);
         return buffer;
     }
 

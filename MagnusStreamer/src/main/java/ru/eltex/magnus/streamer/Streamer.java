@@ -170,7 +170,7 @@ public class Streamer {
         try {
             int size = inputStream.readInt();
             byte[] data = new byte[size];
-            inputStream.read(data, 0, size);
+            inputStream.readFully(data, 0, size);
             return data;
         } catch (IOException e) {
             e.printStackTrace();
