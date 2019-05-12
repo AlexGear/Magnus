@@ -4,10 +4,17 @@
     <script src="jquery.js"></script>
     <script>
         var streamersData;
+        var streamPlayer;
+        var onlineTable;
+        var offlineTable;
 
         $(document).ready(onReady);
 
         function onReady() {
+            streamPlayer = document.getElementById("streamPlayer");
+            onlineTable = document.getElementById("onlineTable");
+            offlineTable = document.getElementById("offlineTable");
+
             $.ajax({
 				type: 'GET',
 				dataType: 'json',
@@ -17,12 +24,15 @@
 					onObtainedStreamersInfo(data);
 				}
 			});
+
+            setInterval(function() {
+                streamPlayer.src = "/screenshot?login=" + streamersData.onlineStreamers[0].login + "&nocache=" + Math.floor(Math.random() * 1000000);
+            }, 200);
         }
 
         function onObtainedStreamersInfo(data) {
             streamersData = data;
 
-            let onlineTable = document.getElementById("onlineTable");
             $(onlineTable).children().remove();
             let i = 0;
             for(const streamer of data.onlineStreamers) {
@@ -30,9 +40,8 @@
                 i++
             }
 
-            i = 0;
-            let offlineTable = document.getElementById("offlineTable");
             $(offlineTable).children().remove();
+            i = 0;
             for(const streamer of data.offlineStreamers) {
                 addRow(offlineTable, i, streamer.streamerInfo, "(Last seen: " + streamer.lastSeen + ")");
                 i++;
@@ -57,5 +66,6 @@
     <div>Offline:</div>
     <table id="offlineTable"></table>
     <div id="currentStreamer"></div>
+    <img id="streamPlayer" height="300px">
 </body>
 </html>

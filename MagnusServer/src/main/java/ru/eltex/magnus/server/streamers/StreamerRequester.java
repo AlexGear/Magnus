@@ -31,11 +31,10 @@ public class StreamerRequester implements Closeable {
         try {
             String command = "screenshot";
             sendToStreamer(command.getBytes());
-            byte[] bytes = readFromStreamer();
-            return bytes != null ? bytes : new byte[0];
+            return readFromStreamer();
         } catch (IOException e) {
             e.printStackTrace();
-            return new byte[0];
+            return null;
         }
     }
 
