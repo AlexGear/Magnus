@@ -20,7 +20,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         private const val OFFLINE_STREAMERS_TABLE = "offline_streamers"
         private const val ADMIN_TABLE = "admin"
 
-        private val LOG = LogManager.getLogger(Database::class)
+        private val LOG = LogManager.getLogger(Database::class.java)
 
         init {
             DriverManager.setLoginTimeout(2)
