@@ -40,15 +40,18 @@ public class StreamersServer {
                 LOG.info("StreamersServer Started");
                 STREAMERS.clear();
 
-                Thread updateStreamersThread = new Thread(StreamersServer::updateOnlineStreamersList);
+                Thread updateStreamersThread = new Thread(StreamersServer::onlineStreamersCheckupThreadProc);
                 updateStreamersThread.setDaemon(true);
                 updateStreamersThread.start();
 
                 while (!server.isClosed()) {
                     LOG.info("Waiting for incoming connection...");
+
                     Socket uncheckedStreamer = server.accept();
                     uncheckedStreamer.setTcpNoDelay(true);
                     LOG.info("New client connected: " + uncheckedStreamer.toString());
+                    
+                    checkupOnlineStreamers();
 
                     Thread signInThread = new Thread(() -> waitingForStreamerSignIn(uncheckedStreamer));
                     signInThread.setDaemon(true);
@@ -147,28 +150,31 @@ public class StreamersServer {
         return PASSWORD_ENCODER.matches(password, employee.getPassword());
     }
 
-    private static void updateOnlineStreamersList() {
+    private static void onlineStreamersCheckupThreadProc() {
         try {
             while (true) {
-                LOG.debug("Checking up online streamers. " + STREAMERS.size() +
-                        " have been online by this moment");
-                List<StreamerRequester> disconnected = selectDisconnectedStreamers();
-                for(StreamerRequester s : disconnected) {
-                    STREAMERS.remove(s.getLogin());
-                }
-                LOG.debug(STREAMERS.size() + " streamers are still online");
-
-                OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
-                for(StreamerRequester streamer : disconnected) {
-                    LOG.info("Streamer disconnected: " + streamer.getLogin());
-                    streamer.close();
-                    OfflineStreamer offlineStreamer = OfflineStreamer.forCurrentTime(streamer.getLogin());
-                    storage.insertOfflineStreamer(offlineStreamer);
-                }
-
+                checkupOnlineStreamers();
                 Thread.sleep(5000);
             }
         } catch (InterruptedException ignored) {
+        }
+    }
+
+    private static synchronized void checkupOnlineStreamers() {
+        LOG.debug("Checking up online streamers. " + STREAMERS.size() +
+                " have been online by this moment");
+        List<StreamerRequester> disconnected = selectDisconnectedStreamers();
+        for(StreamerRequester s : disconnected) {
+            STREAMERS.remove(s.getLogin());
+        }
+        LOG.debug(STREAMERS.size() + " streamers are still online");
+
+        OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
+        for(StreamerRequester streamer : disconnected) {
+            LOG.info("Streamer disconnected: " + streamer.getLogin());
+            streamer.close();
+            OfflineStreamer offlineStreamer = OfflineStreamer.forCurrentTime(streamer.getLogin());
+            storage.insertOfflineStreamer(offlineStreamer);
         }
     }
 
