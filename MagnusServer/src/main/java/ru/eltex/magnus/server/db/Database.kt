@@ -21,6 +21,10 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
         private const val ADMIN_TABLE = "admin"
 
         private val LOG = LogManager.getLogger(Database::class)
+
+        init {
+            DriverManager.setLoginTimeout(2)
+        }
     }
 
     private val connectionURL = properties.connectionURL
