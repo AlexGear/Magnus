@@ -8,12 +8,20 @@
         var onlineTable;
         var offlineTable;
 
+        var intervalId;
+
         $(document).ready(onReady);
 
         function onReady() {
             streamPlayer = document.getElementById("streamPlayer");
             onlineTable = document.getElementById("onlineTable");
             offlineTable = document.getElementById("offlineTable");
+
+            $('#button').click(function(){
+                clearInterval(intervalId);
+                hideStreamItems();
+            });
+            hideStreamItems();
 
             $.ajax({
 				type: 'GET',
@@ -24,10 +32,6 @@
 					onObtainedStreamersInfo(data);
 				}
 			});
-
-            setInterval(function() {
-                streamPlayer.src = "/screenshot?login=" + streamersData.onlineStreamers[0].login + "&nocache=" + Math.floor(Math.random() * 1000000);
-            }, 200);
         }
 
         function onObtainedStreamersInfo(data) {
@@ -52,12 +56,36 @@
             let row = table.insertRow(i);
             let cell = row.insertCell(0);
             cell.innerHTML = "<u>" + streamer.name + "</u> " + (additionalInfo != undefined ? additionalInfo : "");
-            cell.onclick = function() {
-                let container = document.getElementById("currentStreamer");
-                container.innertHTML = streamer.login + "\n" + streamer.name + "\n" + streamer.department + "\n" + 
-                    streamer.jobName + "\n" + streamer.phoneNumber + "\n" + streamer.email;
-            };
+
+            if(table == onlineTable){
+                cell.onclick = function() {
+                    let container = document.getElementById("currentStreamer");
+                    container.innertHTML = streamer.login + "\n" + streamer.name + "\n" + streamer.department + "\n" +
+                        streamer.jobName + "\n" + streamer.phoneNumber + "\n" + streamer.email;
+
+                    clearInterval(intervalId);
+                    showStreamItems();
+                    intervalId = setInterval(function() {
+                        streamPlayer.src = "/screenshot?login=" + streamersData.onlineStreamers[0].login + "&nocache=" + Math.floor(Math.random() * 1000000);
+                        if(streamPlayer.src == null) console.log("errorrrrrr");
+                    }, 200);
+                };
+            }
         }
+
+        function hideStreamItems(){
+            $('#streamTitle').hide();
+            $('#streamPlayer').hide();
+            $('#button').hide();
+        };
+
+        function showStreamItems(){
+            $('#streamTitle').show();
+            $('#streamPlayer').show();
+            $('#button').show();
+        }
+
+
 	</script>
 </head>
 <body>
@@ -66,6 +94,9 @@
     <div>Offline:</div>
     <table id="offlineTable"></table>
     <div id="currentStreamer"></div>
+    <div id="streamTitle">Stream:</div>
     <img id="streamPlayer" height="300px">
+    <div></div>
+    <button id="button">Close stream</button>
 </body>
 </html>
