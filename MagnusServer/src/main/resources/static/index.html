@@ -57,13 +57,13 @@
         function addRow(table, i, streamer, additionalInfo) {
             let row = table.insertRow(i);
             let cell = row.insertCell(0);
-            cell.innerHTML = "<u>" + streamer.name + "</u> " + (additionalInfo != undefined ? additionalInfo : "");
+            cell.innerHTML =   streamer.name + " " + (additionalInfo != undefined ? additionalInfo : "");
 
             if(table == onlineTable){
                 cell.onclick = function() {
-                    let container = document.getElementById("currentStreamer");
-                    container.innertHTML = streamer.login + "\n" + streamer.name + "\n" + streamer.department + "\n" +
-                        streamer.jobName + "\n" + streamer.phoneNumber + "\n" + streamer.email;
+                    var container = document.getElementById("currentStreamer");
+                    container.innerText = " LOGIN:\n" + streamer.login + "\n\n NAME:\n" + streamer.name + "\n\n DEPARTMENT:\n" + streamer.department + "\n\nJOB NAME:\n" +
+                        streamer.jobName + "\n\n PHONE NUMBER:\n" + streamer.phoneNumber + "\n\n EMAIL:\n" + streamer.email;
                     clearInterval(intervalId);
                     showStreamItems();
                     currentStreamerLogin = streamer.login;
@@ -83,29 +83,73 @@
         }
 
         function hideStreamItems(){
-            $('#streamTitle').hide();
             $('#streamPlayer').hide();
             $('#button').hide();
+            $('#currentStreamer').hide();
+
+            $('#info').show();
         };
 
         function showStreamItems(){
-            $('#streamTitle').show();
             $('#streamPlayer').show();
             $('#button').show();
+            $('#currentStreamer').show();
+
+            $('#info').hide();
         }
 
 
-	</script>
+    </script>
+    
+    <style>
+        td {
+            text-align: center; 
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+   
+    </style>
 </head>
 <body>
-    <div>Online:</div>
-    <table id="onlineTable"></table>
-    <div>Offline:</div>
-    <table id="offlineTable"></table>
-    <div id="currentStreamer"></div>
-    <div id="streamTitle">Stream:</div>
-    <img id="streamPlayer" height="300px">
-    <div></div>
-    <button id="button">Close stream</button>
+
+    <table width="100%" height="100%">
+        <tr>
+            <td width="20%" height="100%">
+                <table width="100%" height="100%" cellpadding="5"  border="1">
+                    <tr height="10%">
+                        <th width="100%">Streamers</th>
+                    </tr>
+                    <tr>
+                        <td width="100%" valign="top">
+                            <table id="onlineTable" width="100%"></table>
+                            <table id="offlineTable" width="100%"></table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="80%" height="100%">
+                <table width="100%" height="100%" border="0">
+                    <tr height="10%">
+                        <th width="20%"></th>
+                        <th>Stream</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="currentStreamer"></div>
+                        </td>
+                        <td >
+                            <div id="info">Select an employee from the column 'Online' and click on him</div>
+                            <img id="streamPlayer" height="400px">
+                            <div></div>
+                            <button id="button">Close stream</button>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
