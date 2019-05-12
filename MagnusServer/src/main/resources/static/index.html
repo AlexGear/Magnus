@@ -9,6 +9,7 @@
         var offlineTable;
 
         var intervalId;
+        var currentStreamerLogin;
 
         $(document).ready(onReady);
 
@@ -18,12 +19,12 @@
             offlineTable = document.getElementById("offlineTable");
 
             $('#button').click(function(){
-                clearInterval(intervalId);
-                hideStreamItems();
+                closeStream();
             });
             hideStreamItems();
 
-            $.ajax({
+            setInterval(function(){
+                $.ajax({
 				type: 'GET',
 				dataType: 'json',
 				url: '/get_streamers_list',
@@ -31,7 +32,8 @@
                     console.log(data);
 					onObtainedStreamersInfo(data);
 				}
-			});
+                
+			})},800);
         }
 
         function onObtainedStreamersInfo(data) {
@@ -62,15 +64,22 @@
                     let container = document.getElementById("currentStreamer");
                     container.innertHTML = streamer.login + "\n" + streamer.name + "\n" + streamer.department + "\n" +
                         streamer.jobName + "\n" + streamer.phoneNumber + "\n" + streamer.email;
-
                     clearInterval(intervalId);
                     showStreamItems();
+                    currentStreamerLogin = streamer.login;
                     intervalId = setInterval(function() {
-                        streamPlayer.src = "/screenshot?login=" + streamersData.onlineStreamers[0].login + "&nocache=" + Math.floor(Math.random() * 1000000);
-                        if(streamPlayer.src == null) console.log("errorrrrrr");
+                        streamPlayer.src = "/screenshot?login=" + streamer.login + "&nocache=" + Math.floor(Math.random() * 1000000);
                     }, 200);
                 };
             }
+            else if(streamer.login == currentStreamerLogin){
+                closeStream();
+            }
+        }
+
+        function closeStream(){
+            clearInterval(intervalId);
+            hideStreamItems();
         }
 
         function hideStreamItems(){
