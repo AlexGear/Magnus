@@ -22,6 +22,8 @@ MagnusServer/*.iml
 MagnusServer/magnus.properties
 MagnusServer/magnus_test.properties
 
+MagnusServer/log/
+
 ################################# STREAMER #################################
 
 MagnusStreamer/.gradle
@@ -44,3 +46,5 @@ MagnusStreamer/.idea/*
 MagnusStreamer/*.iml
 
 MagnusStreamer/magnus.properties
+
+MagnusStreamer/log/
