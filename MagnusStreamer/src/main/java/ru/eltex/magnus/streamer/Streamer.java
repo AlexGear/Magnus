@@ -10,6 +10,8 @@ import java.net.Socket;
 public class Streamer {
     private static final Logger LOG = LogManager.getLogger(Streamer.class);
 
+    private enum SignInResult { VERIFIED, FAILED, OCCUPIED }
+
     private Socket socket;
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
@@ -46,29 +48,33 @@ public class Streamer {
     private void threadProc() {
         LOG.info("Streamer thread started");
 
-        boolean connectFailedLastTime = false;
-        boolean signInFailedLastTime = false;
+        boolean lastConnectResult = true;
+        SignInResult lastSignInResult = SignInResult.VERIFIED;
         try {
             while (true) {
                 if (!connectToServer()) {
-                    if (!connectFailedLastTime) {
+                    if (lastConnectResult) {
                         GUI.sendUserErrorMsg("Disconnected");
                     }
-                    connectFailedLastTime = true;
+                    lastConnectResult = false;
                     Thread.sleep(5000);
                     continue;
                 }
-                connectFailedLastTime = false;
+                lastConnectResult = true;
 
-                if (!signIn()) {
-                    if (!signInFailedLastTime) {
-                        GUI.sendUserErrorMsg("Bad login or password");
+                SignInResult signInResult = signIn();
+                if (SignInResult.VERIFIED != signInResult) {
+                    if (lastSignInResult != signInResult) {
+                        switch(signInResult) {
+                            case FAILED: GUI.sendUserErrorMsg("Bad login or password"); break;
+                            case OCCUPIED: GUI.sendUserErrorMsg("This user is already signed in"); break;
+                        }
+                        lastSignInResult = signInResult;
                     }
-                    signInFailedLastTime = true;
                     Thread.sleep(5000);
                     continue;
                 }
-                signInFailedLastTime = false;
+                lastSignInResult = signInResult;
 
                 GUI.sendUserInformMsg("Connected");
                 listenToServer();
@@ -118,7 +124,7 @@ public class Streamer {
         }
     }
 
-    private boolean signIn() {
+    private SignInResult signIn() {
         String login = App.PROPERTIES.getLogin();
         String password = App.PROPERTIES.getPassword();
 
@@ -129,12 +135,16 @@ public class Streamer {
         byte[] bytes = readFromServer();
         if(bytes == null) {
             LOG.warn("Failed to sign in: response bytes == null");
-            return false;
+            return SignInResult.FAILED;
         }
 
         String answer = new String(bytes);
         LOG.info("Signing in: answer = '" + answer + "'");
-        return answer.equals("verified");
+        switch(answer) {
+            case "verified": return SignInResult.VERIFIED;
+            case "occupied": return SignInResult.OCCUPIED;
+            default: return SignInResult.FAILED;
+        }
     }
 
     private void listenToServer() {

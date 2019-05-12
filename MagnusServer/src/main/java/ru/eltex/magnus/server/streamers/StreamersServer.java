@@ -94,16 +94,23 @@ public class StreamersServer {
                 String login = authArray[0];
 
                 StreamerRequester streamer = new StreamerRequester(socket, inputStream, outputStream, login);
-                StreamerRequester prev = STREAMERS.put(login, streamer);
-                if(prev != null && prev.checkConnection()) {
-                    // TODO: remote disconnection
-                    answer = "failed";
-                    LOG.info("Streamer " + login + " is already online. Connection refused.");
-                }
-                else {
-                    if(prev == null) {
-                        StoragesProvider.getOfflineStreamersStorage().removeOfflineStreamerByLogin(login);
+                StreamerRequester prev = STREAMERS.putIfAbsent(login, streamer);
+                boolean alreadyOnline;
+                if (prev == null) {
+                    alreadyOnline = false;
+                    StoragesProvider.getOfflineStreamersStorage().removeOfflineStreamerByLogin(login);
+                } else {
+                    if (prev.checkConnection()) {
+                        alreadyOnline = true;
+                    } else {
+                        alreadyOnline = false;
+                        STREAMERS.put(login, streamer);
                     }
+                }
+                if (alreadyOnline) {
+                    answer = "occupied";
+                    LOG.info("Streamer " + login + " is already online. Connection refused.");
+                } else {
                     answer = "verified";
                     LOG.info("Authenticated successfully: " + login + " (" + socket.toString() + ")");
                 }
