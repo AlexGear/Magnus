@@ -17,6 +17,8 @@ public class Streamer {
     private DataOutputStream outputStream;
 
     private Thread thread;
+    private volatile boolean lastConnectResult;
+    private volatile SignInResult lastSignInResult;
 
     public void init() {
         if(thread != null) {
@@ -37,6 +39,12 @@ public class Streamer {
                 LOG.warn("Failed to close socket: " + e.toString());
             }
         }
+        makeGUIMessagesShowNextTime();
+    }
+
+    private void makeGUIMessagesShowNextTime() {
+        lastConnectResult = true;
+        lastSignInResult = SignInResult.VERIFIED;
     }
 
     private void startThread() {
@@ -48,8 +56,7 @@ public class Streamer {
     private void threadProc() {
         LOG.info("Streamer thread started");
 
-        boolean lastConnectResult = true;
-        SignInResult lastSignInResult = SignInResult.VERIFIED;
+        makeGUIMessagesShowNextTime();
         try {
             while (true) {
                 if (!connectToServer()) {
