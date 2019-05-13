@@ -7,7 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import ru.eltex.magnus.server.db.StoragesProvider;
+import ru.eltex.magnus.server.db.dataclasses.Admin;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.storages.AdminStorage;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 import ru.eltex.magnus.server.streamers.StreamersServer;
 
@@ -57,6 +59,10 @@ public class App {
 //            e.setPassword(new BCryptPasswordEncoder().encode(e.getPassword()));
 //            storage.updateEmployee(e);
 //        }
+//        AdminStorage storage = StoragesProvider.getAdminStorage();
+//        Admin a = storage.getAdmin();
+//        a.setPassword(new BCryptPasswordEncoder().encode(a.getPassword()));
+//        storage.updateAdmin(a);
 
         ApplicationContext context = SpringApplication.run(App.class, args);
         StreamersServer.start();

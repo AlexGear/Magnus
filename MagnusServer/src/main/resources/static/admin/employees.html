@@ -1,0 +1,217 @@
+<html>
+<head>
+    <style>
+        .employeesTable {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th.employeesTable {
+            height: 35px;
+            background-color: rgb(211, 25, 40);
+            text-align: left;
+            color: white;
+        }
+        td.employeesTable {
+            height: 25px;
+        }
+        th.employeesTable, td.employeesTable {
+            padding: 5px;
+        }
+    </style>
+    <script>
+        var departments;
+
+        $(document).ready(function() {
+            $.ajax({
+                type: 'GET',
+				dataType: 'json',
+				url: '/admin/get_departments',
+				success: function(data) {
+                    departments = data;
+                    $.ajax({
+                        type: 'GET',
+                        dataType: 'json',
+                        url: '/admin/get_employees',
+                        success: populateTable
+                    });
+                }
+            });
+        });
+
+        function populateTable(items) {
+            let table = document.getElementById("employeesTable");
+            let i = 1;
+            for (const item of items) {
+                let row = table.insertRow(i++);
+                insertRow(item, row);
+            }
+        }
+
+        function insertRow(employee, row) {
+            // CELLS
+            let i = 0;
+            const loginCell = row.insertCell(i++);
+            const loginP = document.createElement("P");
+            loginP.innerText = employee.login;
+            loginCell.appendChild(loginP);
+
+            const nameCell        = insertEditableCell(row, i++, employee.name, "INPUT");
+            const departmentCell  = insertEditableCell(row, i++, employee.department.name, "SELECT");
+            const jobNameCell     = insertEditableCell(row, i++, employee.jobName, "INPUT");
+            const phoneNumberCell = insertEditableCell(row, i++, employee.phoneNumber, "INPUT");
+            const emailCell       = insertEditableCell(row, i++, employee.email, "INPUT");
+
+            populateDepartmentsSelect(departmentCell.edit);
+            $(phoneNumberCell.edit).keyup(function() {
+                $(phoneNumberCell.edit).val((this.value.match(/[0-9]*/) || ["0"])[0].substring(0, 11));
+            });
+
+            // ACTIONS
+            const actions = row.insertCell(i++);
+            const editButton = createButton("Edit", actions);
+            const deleteButton = createButton("Delete", actions);
+            const okEditButton = createButton("OK", actions);
+            const cancelEditButton = createButton("Cancel", actions);
+
+            $(okEditButton).css("display", "none");
+            $(cancelEditButton).css("display", "none");
+
+            $(editButton).click(function() {
+                $(editButton).css("display", "none");
+                $(deleteButton).css("display", "none");
+                $(okEditButton).css("display", "");
+                $(cancelEditButton).css("display", "");
+
+                editMode(nameCell, textToInputFilling);
+                editMode(departmentCell, function(text, select) { 
+                    let index = departments.find(d => d.name == text.innerText);  
+                    select.selectedIndex = index > 0 ? index : 0;
+                });
+                editMode(jobNameCell, textToInputFilling);
+                editMode(phoneNumberCell, textToInputFilling);
+                editMode(emailCell, textToInputFilling);
+            });
+
+            $(okEditButton).click(function() {
+                let data = {
+                    login: employee.login,
+                    name: nameCell.edit.value,
+                    departmentId: departmentCell.edit.value,
+                    jobName: jobNameCell.edit.value,
+                    phoneNumber: phoneNumberCell.edit.value,
+                    email: emailCell.edit.value
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/admin/edit_employee", 
+                    data: data,
+                    success: function() {
+                        leaveEditModeAll(true);
+                    },
+                    error: function(data) {
+                        alert("An error with status code " + data.status + " occurred: " + data.responseText);
+                    }
+                });
+            });
+
+            $(cancelEditButton).click(function() {
+                leaveEditModeAll(false);
+            });
+
+            function leaveEditModeAll(doApply) {
+                let fillingFunc = doApply ? inputToTextFilling : null;
+                leaveEdit(nameCell, fillingFunc);
+                leaveEdit(departmentCell, doApply ? function(select, text) {
+                    text.innerText = select.options[select.selectedIndex].innerText;
+                } : null);
+                leaveEdit(jobNameCell, fillingFunc);
+                leaveEdit(phoneNumberCell, fillingFunc);
+                leaveEdit(emailCell, fillingFunc);
+                
+                $(editButton).css("display", "");
+                $(deleteButton).css("display", "");
+                $(okEditButton).css("display", "none");
+                $(cancelEditButton).css("display", "none");
+            }
+        }
+
+        function insertEditableCell(row, pos, text, editElementName) {
+            const cell = row.insertCell(pos);
+
+            const p = document.createElement("P");
+            p.innerText = text;
+            $(p).css("width", "100%");
+
+            cell.appendChild(p);
+            const editElement = document.createElement(editElementName);
+            $(editElement).css("width", "100%");
+            $(editElement).css("display", "none");
+            cell.appendChild(editElement);
+            
+            return { text: p, edit: editElement };
+        }
+
+        function createButton(text, parent) {
+            let button = document.createElement("BUTTON");
+            button.innerText = text;
+            parent.appendChild(button);
+            return button;
+        }
+
+        function populateDepartmentsSelect(select) {
+            for(const d of departments) {
+                let option = document.createElement("OPTION");
+                option.value = d.id;
+                option.innerText = d.name;
+                select.appendChild(option);
+            }
+        }
+
+        function editMode(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.text, cell.edit);
+            }
+            $(cell.text).css("display", "none");
+            $(cell.edit).css("display", "");
+        }
+
+        function textToInputFilling(text, input) {
+            input.value = text.innerText;
+        }
+
+        function leaveEdit(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.edit, cell.text);
+            }
+            $(cell.text).css("display", "");
+            $(cell.edit).css("display", "none");
+        }
+
+        function inputToTextFilling(input, text) {
+            text.innerText = input.value;
+        }
+    </script>
+</head>
+<body style="font-family: sans-serif; line-height: 1.5em; margin: 0;">
+    <div><h3>Employees</h3></div>
+    <div style="margin-bottom: 10px;"><button style="width: 150px">Add new</button></div>
+    <div>
+        <table id="employeesTable" style="width: 95%; font-size: 0.8em" class="employeesTable">
+            <tr class="employeesTable">
+                <th style="width: 10%" class="employeesTable">Login</th>
+                <th style="width: 20%" class="employeesTable">Name</th>
+                <th style="width: 15%" class="employeesTable">Department</th>
+                <th style="width: 15%" class="employeesTable">Job Name</th>
+                <th style="width: 10%" class="employeesTable">Phone Number</th>
+                <th style="width: 20%" class="employeesTable">Email</th>
+                <th style="width: 10%" class="employeesTable">Actions</th>
+            </tr>
+        </table>
+    </div>
+    <!-- <form method="POST" action="/login">
+		<p>Login: <input type="text" name="login"></p>
+		<p>Password: <input type="password" name="password">
+		<p><button type="submit">Войти</button></p>
+    </form> -->
+</body>
+</html>
