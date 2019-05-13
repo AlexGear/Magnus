@@ -2,11 +2,9 @@ package ru.eltex.magnus.server.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -23,7 +21,7 @@ public class AdminPageController {
         return employees;
     }
 
-    @PostMapping("/admin/edit_employee")
+    @RequestMapping("/admin/edit_employee")
     public ResponseEntity<String> editEmployee(
             @RequestParam("login") String login,
             @RequestParam(value = "name", required = false) String name,
@@ -52,8 +50,37 @@ public class AdminPageController {
         if (phoneNumber != null) e.setPhoneNumber(phoneNumber);
         if (email != null) e.setEmail(email);
 
-        boolean ok = storage.updateEmployee(e);
-        return ResponseEntity.status(ok ? 200 : 520).body("Unknown error");
+        if (storage.updateEmployee(e)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/change_employee_password")
+    public ResponseEntity changeEmployeePassword(
+            @RequestParam("login") String login,
+            @RequestParam("password") String password
+    ) {
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
+        Employee e = storage.getEmployeeByLogin(login);
+        if (e == null) {
+            String body = "User with login '" + login + "' not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+        e.setPassword(new BCryptPasswordEncoder().encode(password));
+        if (storage.updateEmployee(e)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/remove_employee")
+    public ResponseEntity removeEmployee(@RequestParam("login") String login) {
+        EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
+        if (storage.removeEmployeeByLogin(login)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
     }
 
     @GetMapping("/admin/get_departments")

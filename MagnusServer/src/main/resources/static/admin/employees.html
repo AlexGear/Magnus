@@ -1,23 +1,5 @@
 <html>
 <head>
-    <style>
-        .employeesTable {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-        th.employeesTable {
-            height: 35px;
-            background-color: rgb(211, 25, 40);
-            text-align: left;
-            color: white;
-        }
-        td.employeesTable {
-            height: 25px;
-        }
-        th.employeesTable, td.employeesTable {
-            padding: 5px;
-        }
-    </style>
     <script>
         var departments;
 
@@ -69,6 +51,7 @@
             // ACTIONS
             const actions = row.insertCell(i++);
             const editButton = createButton("Edit", actions);
+            const changePasswordButton = createButton("Change password", actions);
             const deleteButton = createButton("Delete", actions);
             const okEditButton = createButton("OK", actions);
             const cancelEditButton = createButton("Cancel", actions);
@@ -79,6 +62,7 @@
             $(editButton).click(function() {
                 $(editButton).css("display", "none");
                 $(deleteButton).css("display", "none");
+                $(changePasswordButton).css("display", "none");
                 $(okEditButton).css("display", "");
                 $(cancelEditButton).css("display", "");
 
@@ -90,6 +74,32 @@
                 editMode(jobNameCell, textToInputFilling);
                 editMode(phoneNumberCell, textToInputFilling);
                 editMode(emailCell, textToInputFilling);
+            });
+
+            $(changePasswordButton).click(function() {
+                $("#chPassword").val("");
+                $("#chPasswordConfirm").val("");
+                $("#chPasswordModal").css("display", "block");
+                $("#chPasswordHeader").text("Password change for user '" + employee.login + "'");
+                $("#chPasswordsDontMatch").css("display", "none");
+                
+                $("#chPasswordOK").off("click").on("click", () => onChangePasswordOK(employee.login));
+                $("#chPasswordCancel").click(onChangePasswordCancel);
+            });
+
+            $(deleteButton).click(function() {
+                if (confirm("Are you sure you want to delete user '" + employee.login + "'?")) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/admin/remove_employee", 
+                        data: { login: employee.login },
+                        success: function() {
+                            row.parentElement.removeChild(row);
+                            alert("Deleted successfully");
+                        },
+                        error: onAjaxError
+                    })
+                }
             });
 
             $(okEditButton).click(function() {
@@ -108,9 +118,7 @@
                     success: function() {
                         leaveEditModeAll(true);
                     },
-                    error: function(data) {
-                        alert("An error with status code " + data.status + " occurred: " + data.responseText);
-                    }
+                    error: onAjaxError
                 });
             });
 
@@ -130,9 +138,15 @@
                 
                 $(editButton).css("display", "");
                 $(deleteButton).css("display", "");
+                $(changePasswordButton).css("display", "");
                 $(okEditButton).css("display", "none");
                 $(cancelEditButton).css("display", "none");
             }
+        }
+
+        function onAjaxError(data) {
+            alert("An error with status code " + data.status + " occurred: " + data.responseText);
+            console.log("Ajax error", data);
         }
 
         function insertEditableCell(row, pos, text, editElementName) {
@@ -159,7 +173,7 @@
         }
 
         function populateDepartmentsSelect(select) {
-            for(const d of departments) {
+            for (const d of departments) {
                 let option = document.createElement("OPTION");
                 option.value = d.id;
                 option.innerText = d.name;
@@ -190,7 +204,74 @@
         function inputToTextFilling(input, text) {
             text.innerText = input.value;
         }
+
+        function onChangePasswordOK(login) {
+            let password = $("#chPassword").val();
+            let confirmation = $("#chPasswordConfirm").val();
+            if (password != confirmation) {
+                $("#chPasswordsDontMatch").css("display", "block");
+                return;
+            }
+            $("#chPasswordsDontMatch").css("display", "none");
+            $.ajax({
+                type: "POST",
+                url: "/admin/change_employee_password", 
+                data: { login: login, password: password },
+                success: function() {
+                    $("#chPasswordModal").css("display", "none");
+                    alert("Password changed successfully");
+                },
+                error: onAjaxError
+            });
+        }
+
+        function onChangePasswordCancel() {
+            $("#chPasswordModal").css("display", "none");
+        }
     </script>
+    <style>
+        .employeesTable {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th.employeesTable {
+            height: 35px;
+            background-color: rgb(211, 25, 40);
+            text-align: left;
+            color: white;
+        }
+        td.employeesTable {
+            height: 25px;
+        }
+        th.employeesTable, td.employeesTable {
+            padding: 5px;
+        }
+        #chPasswordModal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgb(211, 25, 40);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 100px;
+        }
+        #chPasswordWindow {
+            margin: auto;
+            background-color: white;
+            width: 50%;
+            padding: 10px 10px 10px 10px;
+        }
+        .chPasswordDiv {
+            margin: 5px 0 5px 0;
+        }
+        #chPasswordsDontMatch {
+            display: none;
+            color: red;
+        }
+    </style>
 </head>
 <body style="font-family: sans-serif; line-height: 1.5em; margin: 0;">
     <div><h3>Employees</h3></div>
@@ -199,14 +280,28 @@
         <table id="employeesTable" style="width: 95%; font-size: 0.8em" class="employeesTable">
             <tr class="employeesTable">
                 <th style="width: 10%" class="employeesTable">Login</th>
-                <th style="width: 20%" class="employeesTable">Name</th>
-                <th style="width: 15%" class="employeesTable">Department</th>
-                <th style="width: 15%" class="employeesTable">Job Name</th>
-                <th style="width: 10%" class="employeesTable">Phone Number</th>
+                <th style="width: 17%" class="employeesTable">Name</th>
+                <th style="width: 11%" class="employeesTable">Department</th>
+                <th style="width: 13%" class="employeesTable">Job Name</th>
+                <th style="width: 9%" class="employeesTable">Phone Number</th>
                 <th style="width: 20%" class="employeesTable">Email</th>
-                <th style="width: 10%" class="employeesTable">Actions</th>
+                <th style="width: 20%" class="employeesTable">Actions</th>
             </tr>
         </table>
+    </div>
+    <div id="chPasswordModal">
+        <div id="chPasswordWindow">
+            <div><h3 id="chPasswordHeader"></h3></div>
+            <div class="chPasswordDiv">Enter the new password:</div>
+            <div class="chPasswordDiv"><input id="chPassword" type="password"></div>
+            <div class="chPasswordDiv">Confirm the new password:</div>
+            <div class="chPasswordDiv"><input id="chPasswordConfirm" type="password"></div>
+            <div id="chPasswordsDontMatch" class="chPasswordDiv">Password and confirmation password do not match</div>
+            <div class="chPasswordDiv">
+                <button id="chPasswordOK">OK</button>
+                <button id="chPasswordCancel" onclick="onChangePasswordCancel">Cancel</button>
+            </div>
+        </div>
     </div>
     <!-- <form method="POST" action="/login">
 		<p>Login: <input type="text" name="login"></p>
