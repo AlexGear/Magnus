@@ -13,10 +13,18 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+
+/**
+ * Allows to take screenshots
+ */
 class ScreenshotMaker {
     private static final Logger LOG = LogManager.getLogger(ScreenshotMaker.class);
     private static final Robot ROBOT = createRobot();
 
+    /**
+     * Create a Robot object for creating screenshots
+     * @return Robot object
+     */
     private static Robot createRobot() {
         try {
             return new Robot();
@@ -27,12 +35,22 @@ class ScreenshotMaker {
         }
     }
 
+    /**
+     * Takes screenshot and compress it
+     * @return image in byte array
+     */
     static byte[] takeScreenshot() throws IOException {
         Rectangle rect = new Rectangle(calculateScreenBounds());
         BufferedImage image = ROBOT.createScreenCapture(rect);
         return compress(image, 0.2f);
     }
 
+    /**
+     * Compress image
+     * @param image input image
+     * @param scale float between 0 and 1 indicating the desired quality level
+     * @return compressed image in byte array
+     */
     private static byte[] compress(BufferedImage image, float scale) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ImageOutputStream ios = ImageIO.createImageOutputStream(baos))
@@ -53,6 +71,9 @@ class ScreenshotMaker {
         }
     }
 
+    /**
+     * @return width and height of total image from all screens
+     */
     private static Dimension calculateScreenBounds() {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] screens = ge.getScreenDevices();

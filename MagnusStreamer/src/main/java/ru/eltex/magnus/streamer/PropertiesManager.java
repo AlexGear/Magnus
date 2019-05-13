@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 
+/**
+ * Class contains program properties and allows to load it from file and save to file.
+ */
 public class PropertiesManager {
 
     private static final String SERVER_ADDRESS_PROPERTY = "server.address";
@@ -24,10 +27,18 @@ public class PropertiesManager {
     private String login;
     private String password;
 
+    /**
+     * Allocates a new {@link PropertiesManager} object with ability to load properties from file and save to file.
+     * @param fileName the name of the file that contains properties
+     */
     public PropertiesManager(String fileName) {
         this.fileName = fileName;
     }
 
+    /**
+     * Load and fill all property fields from the file
+     * @return the success of the operation
+     */
     public boolean load() {
         LOG.info("Loading properties from '" + fileName + "'");
 
@@ -45,6 +56,10 @@ public class PropertiesManager {
         return true;
     }
 
+    /**
+     * Save all property fields to the file
+     * @return the success of the operation
+     */
     public boolean save() {
         LOG.info("Saving properties to '" + fileName + "'");
 
@@ -63,10 +78,16 @@ public class PropertiesManager {
         return true;
     }
 
+    /**
+     * @return the server's ip-address or the host name stored in the manager;
+     */
     public String getServerAddress() {
         return serverAddress;
     }
 
+    /**
+     * @param serverAddress ip-address or host name
+     */
     public void setServerAddress(String serverAddress) {
         this.serverAddress = serverAddress;
     }
