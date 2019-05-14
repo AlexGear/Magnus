@@ -107,7 +107,6 @@
                         data: { login: employee.login },
                         success: function() {
                             row.remove();
-                            alert("Deleted successfully");
                         },
                         error: onAjaxError
                     })
@@ -282,8 +281,6 @@
                     $("#addNewModal").css("display", "none");
                     clearAddNewWindow();
                     requestItems();
-
-                    alert("New employee added successfully");
                 },
                 error: onAjaxError
             });

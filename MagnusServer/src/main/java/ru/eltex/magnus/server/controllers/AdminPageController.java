@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.storages.DepartmentsStorage;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 
 import java.util.List;
@@ -122,8 +123,51 @@ public class AdminPageController {
         return ResponseEntity.status(520).body("Unknown error");
     }
 
+
+
     @GetMapping("/admin/get_departments")
     public List<Department> getDepartments() {
         return StoragesProvider.getDepartmentsStorage().getAllDepartments();
+    }
+
+    @RequestMapping("/admin/add_department")
+    public ResponseEntity<String> addDepartment(@RequestParam("name") String name) {
+        if (name.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("name is empty");
+        }
+        Department d = new Department(0, name);
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
+        if (storage.insertDepartmentAndAssignId(d)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/edit_department")
+    public ResponseEntity<String> editDepartment(@RequestParam("id") int id, @RequestParam("name") String name) {
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
+        Department d = storage.getDepartmentById(id);
+        if (d == null) {
+            String body = "Department with id '" + id + "' not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+        if (name.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("name is empty");
+        }
+
+        d.setName(name);
+        if (storage.updateDepartment(d)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/remove_department")
+    public ResponseEntity<String> removeDepartment(@RequestParam("id") int id) {
+        DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
+        if (storage.removeDepartmentById(id)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
     }
 }
