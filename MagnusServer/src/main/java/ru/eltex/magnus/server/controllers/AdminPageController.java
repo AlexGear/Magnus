@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
+import ru.eltex.magnus.server.db.dataclasses.Viewer;
 import ru.eltex.magnus.server.db.storages.DepartmentsStorage;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
+import ru.eltex.magnus.server.db.storages.ViewersStorage;
 
 import java.util.List;
 
@@ -125,6 +127,8 @@ public class AdminPageController {
 
 
 
+
+
     @GetMapping("/admin/get_departments")
     public List<Department> getDepartments() {
         return StoragesProvider.getDepartmentsStorage().getAllDepartments();
@@ -166,6 +170,83 @@ public class AdminPageController {
     public ResponseEntity<String> removeDepartment(@RequestParam("id") int id) {
         DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
         if (storage.removeDepartmentById(id)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+
+
+
+    @GetMapping("/admin/get_viewers")
+    public List<Viewer> getViewers() {
+        List<Viewer> viewers = StoragesProvider.getViewersStorage().getAllViewers();
+        viewers.forEach(v -> v.setPassword(""));
+        return viewers;
+    }
+
+    @RequestMapping("/admin/add_viewer")
+    public ResponseEntity<String> addViewer(
+            @RequestParam("login") String login,
+            @RequestParam("password") String password,
+            @RequestParam("name") String name
+    ) {
+        if (login.isEmpty())        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("login is empty");
+        if (password.isEmpty())     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("password is empty");
+        if (name.isEmpty())         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("name is empty");
+
+        Viewer v = new Viewer();
+        v.setLogin(login);
+        v.setPassword(new BCryptPasswordEncoder().encode(password));
+        v.setName(name);
+
+        if(StoragesProvider.getViewersStorage().insertViewer(v)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/edit_viewer")
+    public ResponseEntity<String> editViewer(@RequestParam("login") String login, @RequestParam("name") String name) {
+        ViewersStorage storage = StoragesProvider.getViewersStorage();
+        Viewer v = storage.getViewerByLogin(login);
+        if (v == null) {
+            String body = "Viewer with login '" + login + "' not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+        if (name.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("name is empty");
+        }
+
+        v.setName(name);
+        if (storage.updateViewer(v)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/change_viewer_password")
+    public ResponseEntity<String> changeViewerPassword(
+            @RequestParam("login") String login,
+            @RequestParam("password") String password
+    ) {
+        ViewersStorage storage = StoragesProvider.getViewersStorage();
+        Viewer v = storage.getViewerByLogin(login);
+        if (v == null) {
+            String body = "Viewer with login '" + login + "' not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+        v.setPassword(new BCryptPasswordEncoder().encode(password));
+        if (storage.updateViewer(v)) {
+            return ResponseEntity.ok("OK");
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/remove_viewer")
+    public ResponseEntity<String> removeViewer(@RequestParam("login") String login) {
+        ViewersStorage storage = StoragesProvider.getViewersStorage();
+        if (storage.removeViewerByLogin(login)) {
             return ResponseEntity.ok("OK");
         }
         return ResponseEntity.status(520).body("Unknown error");
