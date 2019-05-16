@@ -3,16 +3,16 @@ package ru.eltex.magnus.server.streamers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.awt.*;
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
-import java.nio.ByteBuffer;
+
+import static ru.eltex.magnus.server.streamers.StreamDialog.*;
+
 
 public class StreamerRequester implements Closeable {
 
-    private static final int MAX_BUFFER_SIZE = 2 << 18;
     private static final int CONNECTION_CHECK_RETRIES = 3;
+    private static final int SCREENSHOT_REFRESH_INTERVAL = 350;
 
     private static final Logger LOG = LogManager.getLogger(StreamerRequester.class);
 
@@ -21,6 +21,10 @@ public class StreamerRequester implements Closeable {
     private DataInputStream inputStream;
     private String login;
 
+    private byte[] screenshot;
+    private Thread thread;
+    private boolean translationIsActive = false;
+
     StreamerRequester(Socket socket, DataInputStream inputStream, DataOutputStream outputStream, String login) {
         this.socket = socket;
         this.inputStream = inputStream;
@@ -28,18 +32,45 @@ public class StreamerRequester implements Closeable {
         this.login = login;
     }
 
+    public void startStreaming() {
+        if (thread != null) {
+            return;
+        }
+        translationIsActive = true;
+        thread = new Thread(() -> {
+            while (translationIsActive && !socket.isClosed()) {
+                takeScreenshot();
+                try {
+                    Thread.sleep(SCREENSHOT_REFRESH_INTERVAL);
+                } catch (InterruptedException e) {
+                    LOG.warn("Failed to put the thread to sleep");
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public void stopStreaming() {
+        translationIsActive = false;
+    }
+
     public String getLogin() {
         return login;
     }
 
-    public synchronized byte[] takeScreenshot() {
+    public byte[] getScreenshot() {
+        return screenshot;
+    }
+
+    private synchronized void takeScreenshot() {
         try {
             String command = "screenshot";
-            sendToStreamer(command.getBytes());
-            return readFromStreamer();
+            sendMessage(outputStream, command.getBytes());
+            screenshot = getMessage(inputStream);
         } catch (IOException e) {
             LOG.warn("Failed to take screenshot from '" + login + "': " + e.toString());
-            return null;
+            screenshot = null;
         }
     }
 
@@ -50,8 +81,8 @@ public class StreamerRequester implements Closeable {
             }
             final String command = "checkup";
             for (int i = 0; i < CONNECTION_CHECK_RETRIES; i++) {
-                sendToStreamer(command.getBytes());
-                byte[] bytes = readFromStreamer();
+                sendMessage(outputStream, command.getBytes());
+                byte[] bytes = getMessage(inputStream);
                 if (bytes == null) {
                     LOG.warn("Connection check for '" + login + "' (retry #" + i + ") failed: bytes == null");
                     continue;
@@ -66,24 +97,6 @@ public class StreamerRequester implements Closeable {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    private synchronized void sendToStreamer(byte[] data) throws IOException {
-        outputStream.writeInt(data.length);
-        outputStream.write(data);
-        outputStream.flush();
-    }
-
-    private synchronized byte[] readFromStreamer() throws IOException {
-        int size = inputStream.readInt();
-        if (size < 0 || size > MAX_BUFFER_SIZE) {
-            LOG.warn("Unacceptable message size: " + size);
-            return null;
-        }
-
-        byte[] buffer = new byte[size];
-        inputStream.readFully(buffer, 0, size);
-        return buffer;
     }
 
     @Override

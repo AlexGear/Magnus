@@ -12,13 +12,13 @@ import ru.eltex.magnus.server.streamers.StreamersServer;
 @RestController
 public class ImageController {
     @GetMapping("/screenshot")
-    public ResponseEntity<byte[]> takeScreenshot(@RequestParam("login") String login) {
+    public ResponseEntity<byte[]> getScreenshot(@RequestParam("login") String login) {
         StreamerRequester streamerRequester = StreamersServer.getStreamerByLogin(login);
         if (streamerRequester == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        byte[] screenshot = streamerRequester.takeScreenshot();
+        byte[] screenshot = streamerRequester.getScreenshot();
         if(screenshot == null) {
             final int unknownError = 520;
             return ResponseEntity.status(unknownError).body(null);

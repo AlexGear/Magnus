@@ -17,8 +17,10 @@ import java.net.Socket;
 import java.lang.String;
 import java.util.*;
 
+import static ru.eltex.magnus.server.streamers.StreamDialog.*;
+
+
 public class StreamersServer {
-    private static final int MAX_READ_BUFFER_SIZE = 2 << 10;
 
     private static final Logger LOG = LogManager.getLogger(StreamersServer.class);
     private static final PasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
@@ -79,7 +81,7 @@ public class StreamersServer {
             DataInputStream inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             DataOutputStream outputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
-            byte[] bytes = readMessage(inputStream);
+            byte[] bytes = getMessage(inputStream);
             if (bytes == null) {
                 socket.close();
                 return;
@@ -108,35 +110,20 @@ public class StreamersServer {
                     }
                 }
                 if (alreadyOnline) {
-                    answer = "occupied";
+                    sendMessage(outputStream, "occupied".getBytes());
                     LOG.info("Streamer " + login + " is already online. Connection refused.");
                 } else {
-                    answer = "verified";
+                    sendMessage(outputStream, "verified".getBytes());
+                    streamer.startStreaming();
                     LOG.info("Authenticated successfully: " + login + " (" + socket.toString() + ")");
                 }
             } else {
-                answer = "failed";
+                sendMessage(outputStream, "failed".getBytes());
                 LOG.info("Authentication refused: " + socket.toString());
             }
-
-            outputStream.writeInt(answer.length());
-            outputStream.write(answer.getBytes());
-            outputStream.flush();
         } catch (IOException e) {
             LOG.warn("Exception while waiting streamer to sign in: " + e.toString());
         }
-    }
-
-    private static byte[] readMessage(DataInputStream inputStream) throws IOException {
-        int size = inputStream.readInt();
-        if (size < 0 || size > MAX_READ_BUFFER_SIZE) {
-            LOG.warn("Unacceptable message size: " + size);
-            return null;
-        }
-
-        byte[] buffer = new byte[size];
-        inputStream.readFully(buffer, 0, size);
-        return buffer;
     }
 
     private static boolean checkAuthData(String[] authArray) {
