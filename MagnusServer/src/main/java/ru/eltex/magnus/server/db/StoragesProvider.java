@@ -54,4 +54,6 @@ public class StoragesProvider {
     public static AdminStorage getAdminStorage() {
         return DATABASE_INSTANCE;
     }
+
+    public static SecureConfigure getSecureConfigure() { return  DATABASE_INSTANCE; }
 }

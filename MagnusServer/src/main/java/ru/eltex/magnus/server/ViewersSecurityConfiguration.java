@@ -5,13 +5,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.provisioning.InMemoryUserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Admin;
 import ru.eltex.magnus.server.db.dataclasses.Viewer;
+
+import javax.sql.DataSource;
+
+import ru.eltex.magnus.server.db.storages.SecureConfigure;
 
 @Configuration
 @EnableWebSecurity
@@ -32,16 +35,10 @@ public class ViewersSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder authenticationMgr) throws Exception {
-        InMemoryUserDetailsManagerConfigurer<AuthenticationManagerBuilder> builder =
-                authenticationMgr.inMemoryAuthentication();
+        SecureConfigure configure = StoragesProvider.getSecureConfigure();
+        configure.setSqlQuery(authenticationMgr);
 
-        Admin admin = StoragesProvider.getAdminStorage().getAdmin();
-        builder.withUser(admin.getLogin()).password(admin.getPassword()).roles("ADMIN");
-
-        for (Viewer viewer : StoragesProvider.getViewersStorage().getAllViewers()) {
-            builder.withUser(viewer.getLogin()).password(viewer.getPassword()).roles("VIEWER");
-        }
-
-        builder.passwordEncoder(new BCryptPasswordEncoder());
     }
+
+
 }

@@ -5,12 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import ru.eltex.magnus.server.db.StoragesProvider;
-import ru.eltex.magnus.server.db.dataclasses.Admin;
-import ru.eltex.magnus.server.db.dataclasses.Employee;
-import ru.eltex.magnus.server.db.storages.AdminStorage;
-import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 import ru.eltex.magnus.server.streamers.StreamersServer;
 
 import java.io.BufferedReader;

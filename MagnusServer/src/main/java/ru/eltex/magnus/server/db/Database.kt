@@ -1,9 +1,13 @@
 package ru.eltex.magnus.server.db
 
+import org.apache.commons.dbcp.BasicDataSource
 import org.apache.logging.log4j.LogManager
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import ru.eltex.magnus.server.db.dataclasses.*
 import ru.eltex.magnus.server.db.storages.*
 import java.sql.*
+import javax.sql.DataSource
 
 /**
  * Represents an object providing access to SQL database.
@@ -11,7 +15,7 @@ import java.sql.*
  * needed to establish connection to the database
  */
 class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsStorage,
-        OfflineStreamersStorage, ViewersStorage, AdminStorage {
+        OfflineStreamersStorage, ViewersStorage, AdminStorage, SecureConfigure {
 
     companion object {
         private const val EMPLOYEES_TABLE = "employees"
@@ -410,5 +414,27 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             statement.setObject(i + 1, args[i])
         }
         return statement
+    }
+
+    fun getDataSource(): DataSource {
+        val dataSource = BasicDataSource()
+        dataSource.driverClassName = "com.mysql.jdbc.Driver"
+        dataSource.url = connectionURL;
+        dataSource.username = databaseLogin;
+        dataSource.password = databasePassword;
+        return dataSource
+    }
+
+    override fun setSqlQuery(authenticationMgr : AuthenticationManagerBuilder){
+        authenticationMgr.jdbcAuthentication().dataSource(getDataSource())
+                .usersByUsernameQuery("SELECT login as username, password, true as enabled " +
+                        "FROM $VIEWERS_TABLE WHERE login=? UNION " +
+                        "SELECT login as username, password, true as enabled " +
+                        "FROM $ADMIN_TABLE ")
+                .authoritiesByUsernameQuery("SELECT login as username, 'ROLE_VIEWER' as authority " +
+                        "FROM $VIEWERS_TABLE WHERE login=? UNION " +
+                        "SELECT login as username, 'ROLE_ADMIN' as authority " +
+                        "FROM $ADMIN_TABLE")
+                .passwordEncoder(BCryptPasswordEncoder())
     }
 }
