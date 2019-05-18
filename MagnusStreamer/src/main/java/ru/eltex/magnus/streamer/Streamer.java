@@ -3,8 +3,10 @@ package ru.eltex.magnus.streamer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.awt.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
 
 public class Streamer {
@@ -20,11 +22,14 @@ public class Streamer {
     private volatile boolean lastConnectResult;
     private volatile SignInResult lastSignInResult;
 
+    private GUI gui;
+
     public void init() {
         if(thread != null) {
             return;
         }
         startThread();
+        gui = GUI.getInstance();
     }
 
     public void onPropertiesUpdated() {
@@ -61,7 +66,9 @@ public class Streamer {
             while (true) {
                 if (!connectToServer()) {
                     if (lastConnectResult) {
-                        GUI.sendUserErrorMsg("Disconnected");
+                        gui.setTrayIconState(GUI.TrayIconState.ERROR);
+                        gui.setStatusMessage("Disconnected", TrayIcon.MessageType.ERROR);
+                        gui.displayTrayMessage("Disconnected", TrayIcon.MessageType.ERROR);
                     }
                     lastConnectResult = false;
                     Thread.sleep(5000);
@@ -73,17 +80,23 @@ public class Streamer {
                 if (SignInResult.VERIFIED != signInResult) {
                     if (lastSignInResult != signInResult) {
                         switch(signInResult) {
-                            case FAILED: GUI.sendUserErrorMsg("Bad login or password"); break;
-                            case OCCUPIED: GUI.sendUserErrorMsg("This user is already signed in"); break;
+                            case FAILED:
+                                gui.setStatusMessage("Bad login or password", TrayIcon.MessageType.ERROR);
+                                break;
+                            case OCCUPIED:
+                                gui.setStatusMessage("This user is already signed in", TrayIcon.MessageType.ERROR);
+                                break;
                         }
                         lastSignInResult = signInResult;
                     }
+                    gui.setTrayIconState(GUI.TrayIconState.ERROR);
                     Thread.sleep(5000);
                     continue;
                 }
                 lastSignInResult = signInResult;
 
-                GUI.sendUserInformMsg("Connected");
+                gui.setTrayIconState(GUI.TrayIconState.NORMAL);
+                gui.setStatusMessage("Connected", TrayIcon.MessageType.INFO);
                 listenToServer();
             }
         } catch(InterruptedException e) {
@@ -125,7 +138,9 @@ public class Streamer {
     public void disconnect() {
         try {
             socket.close();
-            GUI.sendUserErrorMsg("Disconnected");
+            gui.setTrayIconState(GUI.TrayIconState.ERROR);
+            gui.setStatusMessage("Disconnected", TrayIcon.MessageType.ERROR);
+            gui.displayTrayMessage("Disconnected", TrayIcon.MessageType.ERROR);
         } catch (IOException e) {
             LOG.warn("Failed to disconnect:" + e.toString());
         }
@@ -169,6 +184,12 @@ public class Streamer {
                     break;
                 case "checkup":
                     sendToServer("connected".getBytes());
+                    break;
+                case "message":
+                    byte[] data = readFromServer();
+                    if (data != null) {
+                        gui.displayTrayMessage(new String(data), TrayIcon.MessageType.INFO);
+                    }
                     break;
             }
         }

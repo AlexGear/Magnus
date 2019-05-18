@@ -1,6 +1,10 @@
 package ru.eltex.magnus.server.controllers;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -13,6 +17,7 @@ import ru.eltex.magnus.server.streamers.StreamersServer;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @RestController
 public class StreamersController {
@@ -68,5 +73,16 @@ public class StreamersController {
         }
 
         return new StreamersListInfo(onlineInfos, offlineInfos);
+    }
+
+    @RequestMapping("/send_message")
+    public ResponseEntity<String> sendMessage(@RequestParam("login") String login, @RequestParam("message") String message) {
+        StreamerRequester streamerRequester = StreamersServer.getStreamerByLogin(login);
+        if (streamerRequester == null) {
+            String body = "User with login '" + login + "' not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+        streamerRequester.sendNotification(message);
+        return ResponseEntity.ok("OK");
     }
 }

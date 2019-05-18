@@ -72,6 +72,16 @@ public class StreamerRequester implements Closeable {
         }
     }
 
+    public void sendNotification(String text) {
+        String command = "message";
+        try {
+            sendMessage(outputStream, command.getBytes());
+            sendMessage(outputStream, text.getBytes());
+        } catch (IOException e) {
+            LOG.warn("Failed to send notification to '" + login + "': " + e.toString());
+        }
+    }
+
     public boolean checkConnection() {
         try {
             if (socket.isClosed()) {
