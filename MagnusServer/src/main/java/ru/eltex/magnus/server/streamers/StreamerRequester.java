@@ -23,7 +23,6 @@ public class StreamerRequester implements Closeable {
 
     private byte[] screenshot;
     private Thread thread;
-    private boolean translationIsActive = false;
 
     StreamerRequester(Socket socket, DataInputStream inputStream, DataOutputStream outputStream, String login) {
         this.socket = socket;
@@ -36,14 +35,13 @@ public class StreamerRequester implements Closeable {
         if (thread != null) {
             return;
         }
-        translationIsActive = true;
         thread = new Thread(() -> {
-            while (translationIsActive && !socket.isClosed()) {
+            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
                 takeScreenshot();
                 try {
                     Thread.sleep(SCREENSHOT_REFRESH_INTERVAL);
                 } catch (InterruptedException e) {
-                    LOG.warn("Failed to put the thread to sleep");
+                    Thread.currentThread().interrupt();
                 }
             }
         });
@@ -52,7 +50,7 @@ public class StreamerRequester implements Closeable {
     }
 
     public void stopStreaming() {
-        translationIsActive = false;
+        thread.interrupt();
     }
 
     public String getLogin() {
@@ -71,6 +69,16 @@ public class StreamerRequester implements Closeable {
         } catch (IOException e) {
             LOG.warn("Failed to take screenshot from '" + login + "': " + e.toString());
             screenshot = null;
+        }
+    }
+
+    public void sendNotification(String text) {
+        String command = "message";
+        try {
+            sendMessage(outputStream, command.getBytes());
+            sendMessage(outputStream, text.getBytes());
+        } catch (IOException e) {
+            LOG.warn("Failed to send notification to '" + login + "': " + e.toString());
         }
     }
 

@@ -27,6 +27,8 @@ public class GUI extends JFrame {
     private BufferedImage warningIcon;
     private BufferedImage errorIcon;
 
+    public enum TrayIconState { NORMAL, WARNING, ERROR }
+
     private JLabel status;
     private JTextField hostField;
     private JTextField portField;
@@ -39,16 +41,8 @@ public class GUI extends JFrame {
         }
     }
 
-    public static void sendUserErrorMsg(String msg) {
-        instance.errorMsg(msg);
-    }
-
-    public static void sendUserWarningMsg(String msg) {
-        instance.warningMsg(msg);
-    }
-
-    public static void sendUserInformMsg(String msg){
-        instance.informMsg(msg);
+    public static GUI getInstance() {
+        return instance;
     }
 
     private GUI() {
@@ -171,7 +165,7 @@ public class GUI extends JFrame {
         String password = passwordField.getText().trim();
 
         if (host.isEmpty() || portStr.isEmpty() || login.isEmpty() || password.isEmpty()) {
-            errorMsg("Please, fill all the fields");
+            setStatusMessage("Please, fill all the fields", MessageType.ERROR);
             return false;
         }
 
@@ -179,11 +173,11 @@ public class GUI extends JFrame {
         try {
             port = Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
-            errorMsg("Port must be a number");
+            setStatusMessage("Port must be a number", MessageType.ERROR);
             return false;
         }
         if(port < 0 || port > 65535) {
-            errorMsg("Port must be in range [0; 65535]");
+            setStatusMessage("Port must be in range [0; 65535]", MessageType.ERROR);
             return false;
         }
 
@@ -211,34 +205,31 @@ public class GUI extends JFrame {
         }
     }
 
-    private void displayMsg(String msg, MessageType type) {
-        status.setText(msg);
-
+    public void setTrayIconState(TrayIconState state) {
         BufferedImage icon = normalIcon;
-        Color color = Color.GREEN;
-        switch (type) {
-            case WARNING: icon = warningIcon; color = Color.RED; break;
-            case ERROR: icon = errorIcon; color = Color.RED; break;
+        switch (state) {
+            case WARNING: icon = warningIcon;
+            case ERROR: icon = errorIcon;
         }
-
         trayIcon.setImage(icon);
         icon.flush();
+    }
+
+    public void setStatusMessage(String msg, MessageType type) {
+        LOG.info("Displaying " + type.name() + " status message: " + msg);
+        status.setText(msg);
+
+        Color color = Color.GREEN;
+        switch (type) {
+            case WARNING:
+            case ERROR:
+                color = Color.RED; break;
+        }
         status.setForeground(color);
     }
 
-    private void errorMsg(String msg) {
-        LOG.info("Displaying error message: " + msg);
-        trayIcon.displayMessage("", msg, MessageType.ERROR);
-        displayMsg(msg, MessageType.ERROR);
-    }
-
-    private void warningMsg(String msg) {
-        LOG.info("Displaying warning message: " + msg);
-        displayMsg(msg, MessageType.WARNING);
-    }
-
-    private void informMsg(String msg) {
-        LOG.info("Displaying info message: " + msg);
-        displayMsg(msg, MessageType.INFO);
+    public void displayTrayMessage(String msg, MessageType type) {
+        LOG.info("Displaying " + type.name() + " tray message: " + msg);
+        trayIcon.displayMessage("Magnus", msg, type);
     }
 }
