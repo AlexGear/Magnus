@@ -14,7 +14,6 @@ import ru.eltex.magnus.server.db.storages.OfflineStreamersStorage;
 import ru.eltex.magnus.server.streamers.StreamerRequester;
 import ru.eltex.magnus.server.streamers.StreamersServer;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,11 +34,11 @@ public class StreamersController {
     }
     public static class OfflineStreamerInfo {
         public final StreamerInfo streamerInfo;
-        public final Timestamp lastSeen;
+        public final String lastSeenTimeAgo;
 
-        public OfflineStreamerInfo(StreamerInfo streamerInfo, Timestamp lastSeen) {
+        public OfflineStreamerInfo(StreamerInfo streamerInfo, String lastSeenTimeAgo) {
             this.streamerInfo = streamerInfo;
-            this.lastSeen = lastSeen;
+            this.lastSeenTimeAgo = lastSeenTimeAgo;
         }
     }
     public static class StreamersListInfo {
@@ -66,8 +65,8 @@ public class StreamersController {
 
         List<OfflineStreamerInfo> offlineInfos = new ArrayList<>();
         for(OfflineStreamer streamer : offlineStreamersStorage.getAllOfflineStreamers()) {
+            String lastSeen = streamer.getLastSeenTimeAgo();
             String login = streamer.getLogin();
-            Timestamp lastSeen = streamer.getLastSeen();
             Employee employee = employeesStorage.getEmployeeByLogin(login);
             offlineInfos.add(new OfflineStreamerInfo(new StreamerInfo(employee), lastSeen));
         }

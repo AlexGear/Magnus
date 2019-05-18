@@ -4,6 +4,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Objects;
 
+import static java.util.concurrent.TimeUnit.*;
+
+
 /**
  * Class representing information about an offline streamer:
  * login and last time ({@link Timestamp}) it was online.<br>
@@ -51,6 +54,33 @@ public class OfflineStreamer {
 
     public Timestamp getLastSeen() {
         return lastSeen;
+    }
+
+    public String getLastSeenTimeAgo() {
+        long elapsed = Timestamp.from(Instant.now()).getTime() - lastSeen.getTime();
+        StringBuilder sb = new StringBuilder();
+
+        long d = MILLISECONDS.toDays(elapsed);
+        if (d != 0) {
+            sb.append(d).append("d ");
+            elapsed -= DAYS.toMillis(d);
+        }
+        long h = MILLISECONDS.toHours(elapsed);
+        if (h != 0) {
+            sb.append(h).append("h ");
+            elapsed -= HOURS.toMillis(h);
+        }
+        long m = MILLISECONDS.toMinutes(elapsed);
+        if (d == 0 && m != 0) {
+            sb.append(m).append("m ");
+            elapsed -= MINUTES.toMillis(m);
+        }
+        long s = MILLISECONDS.toSeconds(elapsed);
+        if (d + h + m == 0) {
+            sb.append(s).append("s ");
+        }
+
+        return sb.toString().trim();
     }
 
     public void setLastSeen(Timestamp lastSeen) {

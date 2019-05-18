@@ -70,7 +70,7 @@
             $(offlineTable).children().remove();
             i = 0;
             for(const streamer of data.offlineStreamers) {
-                addRow(offlineTable, i, streamer.streamerInfo, "(Last seen: " + streamer.lastSeen + ")");
+                addRow(offlineTable, i, streamer.streamerInfo, "(Last seen: " + streamer.lastSeenTimeAgo + " ago)");
                 i++;
             }
         }
