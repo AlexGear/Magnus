@@ -13,6 +13,7 @@ public class StreamerRequester implements Closeable {
 
     private static final int CONNECTION_CHECK_RETRIES = 3;
     private static final int SCREENSHOT_REFRESH_INTERVAL = 350;
+    private static final int IDLE_TIME_BEFORE_STOP_STREAMING = 5000;
 
     private static final Logger LOG = LogManager.getLogger(StreamerRequester.class);
 
@@ -23,6 +24,7 @@ public class StreamerRequester implements Closeable {
 
     private byte[] screenshot;
     private Thread thread;
+    private long lastRequestTime = 0;
 
     StreamerRequester(Socket socket, DataInputStream inputStream, DataOutputStream outputStream, String login) {
         this.socket = socket;
@@ -32,11 +34,12 @@ public class StreamerRequester implements Closeable {
     }
 
     public void startStreaming() {
-        if (thread != null) {
+        if (thread != null && thread.isAlive()) {
             return;
         }
         thread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
+            while (!Thread.currentThread().isInterrupted() && !socket.isClosed() &&
+                    System.currentTimeMillis() - lastRequestTime < IDLE_TIME_BEFORE_STOP_STREAMING) {
                 takeScreenshot();
                 try {
                     Thread.sleep(SCREENSHOT_REFRESH_INTERVAL);
@@ -58,6 +61,10 @@ public class StreamerRequester implements Closeable {
     }
 
     public byte[] getScreenshot() {
+        lastRequestTime = System.currentTimeMillis();
+        if (thread == null || !thread.isAlive()) {
+            startStreaming();
+        }
         return screenshot;
     }
 

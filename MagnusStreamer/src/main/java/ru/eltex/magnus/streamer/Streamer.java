@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 
 
 public class Streamer {

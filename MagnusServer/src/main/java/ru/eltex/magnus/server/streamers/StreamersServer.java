@@ -91,7 +91,6 @@ public class StreamersServer {
             String[] authArray = authString.split(":");
             boolean verified = checkAuthData(authArray);
 
-            String answer;
             if (verified) {
                 String login = authArray[0];
 
@@ -114,7 +113,6 @@ public class StreamersServer {
                     LOG.info("Streamer " + login + " is already online. Connection refused.");
                 } else {
                     sendMessage(outputStream, "verified".getBytes());
-                    streamer.startStreaming();
                     LOG.info("Authenticated successfully: " + login + " (" + socket.toString() + ")");
                 }
             } else {
