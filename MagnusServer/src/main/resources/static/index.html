@@ -11,6 +11,7 @@
         var offlineTable;
 
         var intervalId;
+        var currentUserName;
         var currentStreamerLogin;
 
         $(document).ready(onReady);
@@ -19,6 +20,9 @@
             streamPlayer = document.getElementById("streamPlayer");
             onlineTable = document.getElementById("onlineTable");
             offlineTable = document.getElementById("offlineTable");
+
+            getCurrentUserName();
+            getCurrentUserAuthorities();
 
             $('#button').click(function(){
                 closeStream();
@@ -55,6 +59,32 @@
 				}
                 
 			})},800);
+        }
+
+        function getCurrentUserName() {
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/username",
+                success: function(data) {
+                    currentUserName = data;
+                    document.getElementById("username").innerHTML = data;
+                    $("#username").innerHTML = data;
+                }
+            })
+        }
+
+        function getCurrentUserAuthorities() {
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: "/user_authorities",
+                success: function(data) {
+                    if (data.indexOf("ROLE_ADMIN") != -1) {
+                        document.getElementById("adminLink").hidden = false;
+                    }
+                }
+            })
         }
 
         function onObtainedStreamersInfo(data) {
@@ -140,6 +170,21 @@
 </head>
 <body>
     <table width="100%" height="100%">
+        <tr>
+            <td>
+                <table width="100%" height="100%" cellpadding="5">
+                    <tr>
+                        <td>
+                            <div id="username"></div>
+                            <a href="/logout">Logout</a>
+                        </td>
+                        <td>
+                            <a id="adminLink" href="/admin/adminpage.html" hidden>ADMIN'S PAGE<br></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
         <tr>
             <td width="20%" height="100%">
                 <table width="100%" height="100%" cellpadding="5"  border="1">
