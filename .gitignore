@@ -19,6 +19,10 @@ MagnusServer/out/*
 MagnusServer/.idea/*
 MagnusServer/*.iml
 
+MagnusServer/magnus.properties
+MagnusServer/magnus_test.properties
+
+MagnusServer/log/
 
 ################################# STREAMER #################################
 
@@ -40,3 +44,7 @@ MagnusStreamer/.gradletasknamecache
 MagnusStreamer/out/*
 MagnusStreamer/.idea/*
 MagnusStreamer/*.iml
+
+MagnusStreamer/magnus.properties
+
+MagnusStreamer/log/

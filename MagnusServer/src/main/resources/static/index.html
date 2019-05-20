@@ -1,0 +1,236 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Magnus</title>
+    <script src="jquery.js"></script>
+</head>
+    <script>
+        var streamersData;
+        var streamPlayer;
+        var onlineTable;
+        var offlineTable;
+
+        var intervalId;
+        var currentUserName;
+        var currentStreamerLogin;
+
+        $(document).ready(onReady);
+
+        function onReady() {
+            streamPlayer = document.getElementById("streamPlayer");
+            onlineTable = document.getElementById("onlineTable");
+            offlineTable = document.getElementById("offlineTable");
+
+            getCurrentUserName();
+            getCurrentUserAuthorities();
+
+            $('#button').click(function(){
+                closeStream();
+            });
+
+            $("#buttonSendMsg").click(function() {
+                msgInput = document.getElementById("msgInput");
+                if (msgInput.value == "") return;
+
+                let data = {
+                    login: currentStreamerLogin,
+                    message: msgInput.value
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/send_message", 
+                    data: data,
+                    success: function() {
+                        msgInput.value = "";
+                    }
+                })
+            });
+
+            hideStreamItems();
+
+            setInterval(function(){
+                $.ajax({
+				type: 'GET',
+				dataType: 'json',
+				url: '/get_streamers_list',
+				success: function(data) {
+                    console.log(data);
+					onObtainedStreamersInfo(data);
+				}
+                
+			})},800);
+        }
+
+        function getCurrentUserName() {
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/username",
+                success: function(data) {
+                    currentUserName = data;
+                    document.getElementById("username").innerHTML = data;
+                    $("#username").innerHTML = data;
+                }
+            })
+        }
+
+        function getCurrentUserAuthorities() {
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: "/user_authorities",
+                success: function(data) {
+                    if (data.indexOf("ROLE_ADMIN") != -1) {
+                        document.getElementById("adminLink").hidden = false;
+                    }
+                }
+            })
+        }
+
+        function onObtainedStreamersInfo(data) {
+            streamersData = data;
+
+            $(onlineTable).children().remove();
+            let i = 0;
+            for(const streamer of data.onlineStreamers) {
+                addRow(onlineTable, i, streamer);
+                i++
+            }
+
+            $(offlineTable).children().remove();
+            i = 0;
+            for(const streamer of data.offlineStreamers) {
+                addRow(offlineTable, i, streamer.streamerInfo, "(Last seen: " + streamer.lastSeenTimeAgo + " ago)");
+                i++;
+            }
+        }
+
+        function addRow(table, i, streamer, additionalInfo) {
+            let row = table.insertRow(i);
+            let cell = row.insertCell(0);
+            cell.innerHTML =   streamer.name + " " + (additionalInfo != undefined ? additionalInfo : "");
+
+            if(table == onlineTable){
+                cell.onclick = function() {
+                    var container = document.getElementById("currentStreamer");
+                    container.innerText = " LOGIN:\n" + streamer.login + "\n\n NAME:\n" + streamer.name + "\n\n DEPARTMENT:\n" + streamer.department + "\n\nJOB NAME:\n" +
+                        streamer.jobName + "\n\n PHONE NUMBER:\n" + streamer.phoneNumber + "\n\n EMAIL:\n" + streamer.email;
+                    clearInterval(intervalId);
+                    showStreamItems();
+                    currentStreamerLogin = streamer.login;
+                    intervalId = setInterval(function() {
+                        streamPlayer.src = "/screenshot?login=" + streamer.login + "&nocache=" + Math.floor(Math.random() * 1000000);
+                    }, 200);
+                };
+                cell.onmouseover = function() {
+                    $(cell).css("background-color", "#65ceff");
+                    document.body.style.cursor = "pointer";
+                };
+                cell.onmouseout = function() {
+                    $(cell).css("background-color", "white");
+                    document.body.style.cursor = "auto";
+                };
+            }
+            else if(streamer.login == currentStreamerLogin){
+                closeStream();
+            }
+        }
+
+        function closeStream(){
+            clearInterval(intervalId);
+            hideStreamItems();
+        }
+
+        function hideStreamItems(){
+            $('#streamPlayer').hide();
+            $('#button').hide();
+            $('#currentStreamer').hide();
+            $('#msgInput').hide();
+            $('#buttonSendMsg').hide();
+
+            $('#info').show();
+        };
+
+        function showStreamItems(){
+            $('#streamPlayer').show();
+            $('#button').show();
+            $('#currentStreamer').show();
+            $('#msgInput').show();
+            $('#buttonSendMsg').show();
+
+            $('#info').hide();
+        }
+
+
+    </script>
+    
+    <style>
+        td {
+            text-align: center; 
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+   
+    </style>
+</head>
+<body>
+    <table width="100%" height="100%">
+        <tr>
+            <td>
+                <table width="100%" height="100%" cellpadding="5">
+                    <tr>
+                        <td>
+                            <div id="username"></div>
+                            <a href="/logout">Logout</a>
+                        </td>
+                        <td>
+                            <a id="adminLink" href="/admin/adminpage.html" hidden>ADMIN'S PAGE<br></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td width="20%" height="100%">
+                <table width="100%" height="100%" cellpadding="5"  border="1">
+                    <tr height="10%">
+                        <th width="100%">Streamers</th>
+                    </tr>
+                    <tr>
+                        <td width="100%" valign="top">
+                            <table id="onlineTable" width="100%"></table>
+                            <table id="offlineTable" width="100%"></table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="80%" height="100%">
+                <table width="100%" height="100%" border="0">
+                    <tr height="10%">
+                        <th width="20%"></th>
+                        <th>Stream</th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="currentStreamer"></div>
+                        </td>
+                        <td>
+                            <div id="info">Select an employee from the column 'Online' and click on him</div>
+                            <img id="streamPlayer" height="400px">
+                            <br><br>
+                            <button id="button">Close stream</button>
+                            <br><br><br>
+                            <input id="msgInput" type="text" size="100">
+                            <br>
+                            <button id="buttonSendMsg">Send message</button>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

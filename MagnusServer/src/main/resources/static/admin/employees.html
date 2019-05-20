@@ -1,0 +1,415 @@
+<html>
+<head>
+    <script>
+        var departments;
+
+        $(document).ready(function() {
+            $("#addNewButton").click(onAddNew);
+            setupPhoneInput(document.getElementById("addNewPhoneNumber"));
+            $("#addNewOK").click(onAddNewOK);
+            $("#addNewCancel").click(onAddNewCancel);
+
+            $.ajax({
+                type: 'GET',
+				dataType: 'json',
+				url: '/admin/get_departments',
+				success: function(data) {
+                    departments = data;
+                    requestItems();
+                }
+            });
+        });
+
+        function requestItems() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/admin/get_employees',
+                success: populateTable
+            });
+        }
+
+        function populateTable(items) {
+            let table = document.getElementById("employeesTable");
+            let rowsLength = table.rows.length;
+            for (let i = 1; i < rowsLength; i++) {
+                table.deleteRow(1);
+            }
+
+            let i = 1;
+            for (const item of items) {
+                let row = table.insertRow(i++);
+                insertRow(item, row);
+            }
+        }
+
+        function insertRow(employee, row) {
+            // CELLS
+            let i = 0;
+            const loginCell = row.insertCell(i++);
+            const loginP = document.createElement("P");
+            loginP.innerText = employee.login;
+            loginCell.appendChild(loginP);
+
+            const nameCell        = insertEditableCell(row, i++, employee.name, "INPUT");
+            const departmentCell  = insertEditableCell(row, i++, employee.department.name, "SELECT");
+            const jobNameCell     = insertEditableCell(row, i++, employee.jobName, "INPUT");
+            const phoneNumberCell = insertEditableCell(row, i++, employee.phoneNumber, "INPUT");
+            const emailCell       = insertEditableCell(row, i++, employee.email, "INPUT");
+
+            populateDepartmentsSelect(departmentCell.edit);
+            setupPhoneInput(phoneNumberCell.edit);
+
+            // ACTIONS
+            const actions = row.insertCell(i++);
+            const editButton = createButton("Edit", actions);
+            const changePasswordButton = createButton("Change password", actions);
+            const deleteButton = createButton("Delete", actions);
+            const okEditButton = createButton("OK", actions);
+            const cancelEditButton = createButton("Cancel", actions);
+
+            $(okEditButton).css("display", "none");
+            $(cancelEditButton).css("display", "none");
+
+            $(editButton).click(function() {
+                $(editButton).css("display", "none");
+                $(deleteButton).css("display", "none");
+                $(changePasswordButton).css("display", "none");
+                $(okEditButton).css("display", "");
+                $(cancelEditButton).css("display", "");
+
+                editMode(nameCell, textToInputFilling);
+                editMode(departmentCell, function(text, select) { 
+                    let index = departments.find(d => d.name == text.innerText);  
+                    select.selectedIndex = index > 0 ? index : 0;
+                });
+                editMode(jobNameCell, textToInputFilling);
+                editMode(phoneNumberCell, textToInputFilling);
+                editMode(emailCell, textToInputFilling);
+            });
+
+            $(changePasswordButton).click(function() {
+                $("#chPassword").val("");
+                $("#chPasswordConfirm").val("");
+                $("#chPasswordModal").css("display", "block");
+                $("#chPasswordHeader").text("Password change for user '" + employee.login + "'");
+                $("#chPasswordsDontMatch").css("display", "none");
+                
+                $("#chPasswordOK").off("click").on("click", () => onChangePasswordOK(employee.login));
+                $("#chPasswordCancel").off("click").on("click", onChangePasswordCancel);
+            });
+
+            $(deleteButton).click(function() {
+                if (confirm("Are you sure you want to delete user '" + employee.login + "'?")) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/admin/remove_employee", 
+                        data: { login: employee.login },
+                        success: function() {
+                            row.remove();
+                        },
+                        error: onAjaxError
+                    })
+                }
+            });
+
+            $(okEditButton).click(function() {
+                let data = {
+                    login: employee.login,
+                    name: nameCell.edit.value,
+                    departmentId: departmentCell.edit.value,
+                    jobName: jobNameCell.edit.value,
+                    phoneNumber: phoneNumberCell.edit.value,
+                    email: emailCell.edit.value
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/admin/edit_employee", 
+                    data: data,
+                    success: function() {
+                        leaveEditModeAll(true);
+                    },
+                    error: onAjaxError
+                });
+            });
+
+            $(cancelEditButton).click(function() {
+                leaveEditModeAll(false);
+            });
+
+            function leaveEditModeAll(doApply) {
+                let fillingFunc = doApply ? inputToTextFilling : null;
+                leaveEdit(nameCell, fillingFunc);
+                leaveEdit(departmentCell, doApply ? function(select, text) {
+                    text.innerText = select.options[select.selectedIndex].innerText;
+                } : null);
+                leaveEdit(jobNameCell, fillingFunc);
+                leaveEdit(phoneNumberCell, fillingFunc);
+                leaveEdit(emailCell, fillingFunc);
+                
+                $(editButton).css("display", "");
+                $(deleteButton).css("display", "");
+                $(changePasswordButton).css("display", "");
+                $(okEditButton).css("display", "none");
+                $(cancelEditButton).css("display", "none");
+            }
+        }
+
+        function setupPhoneInput(input) {
+            $(input).keyup(function() {
+                $(input).val((this.value.match(/[0-9]*/) || ["0"])[0].substring(0, 11));
+            });
+        }
+
+        function onAjaxError(data) {
+            alert("An error with status code " + data.status + " occurred: " + data.responseText);
+            console.log("Ajax error", data);
+        }
+
+        function insertEditableCell(row, pos, text, editElementName) {
+            const cell = row.insertCell(pos);
+
+            const p = document.createElement("P");
+            p.innerText = text;
+            $(p).css("width", "100%");
+
+            cell.appendChild(p);
+            const editElement = document.createElement(editElementName);
+            $(editElement).css("width", "100%");
+            $(editElement).css("display", "none");
+            cell.appendChild(editElement);
+            
+            return { text: p, edit: editElement };
+        }
+
+        function createButton(text, parent) {
+            let button = document.createElement("BUTTON");
+            button.innerText = text;
+            parent.appendChild(button);
+            return button;
+        }
+
+        function populateDepartmentsSelect(select) {
+            for (const child of select.children) {
+                select.removeChild(child);
+            }
+            for (const d of departments) {
+                let option = document.createElement("OPTION");
+                option.value = d.id;
+                option.innerText = d.name;
+                select.appendChild(option);
+            }
+        }
+
+        function editMode(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.text, cell.edit);
+            }
+            $(cell.text).css("display", "none");
+            $(cell.edit).css("display", "");
+        }
+
+        function textToInputFilling(text, input) {
+            input.value = text.innerText;
+        }
+
+        function leaveEdit(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.edit, cell.text);
+            }
+            $(cell.text).css("display", "");
+            $(cell.edit).css("display", "none");
+        }
+
+        function inputToTextFilling(input, text) {
+            text.innerText = input.value;
+        }
+
+        function onChangePasswordOK(login) {
+            let password = $("#chPassword").val();
+            let confirmation = $("#chPasswordConfirm").val();
+            if (password != confirmation) {
+                $("#chPasswordsDontMatch").css("display", "block");
+                return;
+            }
+
+            $("#chPasswordsDontMatch").css("display", "none");
+            $.ajax({
+                type: "POST",
+                url: "/admin/change_employee_password", 
+                data: { login: login, password: password },
+                success: function() {
+                    $("#chPasswordModal").css("display", "none");
+                    alert("Password changed successfully");
+                },
+                error: onAjaxError
+            });
+        }
+
+        function onChangePasswordCancel() {
+            $("#chPasswordModal").css("display", "none");
+        }
+
+        function onAddNew() {
+            $("#addNewModal").css("display", "block");
+            populateDepartmentsSelect(document.getElementById("addNewDepartment"));
+        }
+
+        function onAddNewOK() {
+            let password = $("#addNewPassword").val();
+            let confirmation = $("#addNewPasswordConfirm").val();
+            if (password != confirmation) {
+                $("#addNewPasswordsDontMatch").css("display", "block");
+                return;
+            }
+
+            $("#addNewPasswordsDontMatch").css("display", "none");
+            let data = {
+                login: $("#addNewLogin").val(),
+                password: $("#addNewPassword").val(),
+                departmentId: $("#addNewDepartment").val(),
+                name: $("#addNewName").val(),
+                jobName: $("#addNewJobName").val(),
+                phoneNumber: $("#addNewPhoneNumber").val(),
+                email: $("#addNewEmail").val(),
+            };
+            $.ajax({
+                type: "POST",
+                url: "/admin/add_employee", 
+                data: data,
+                success: function() {
+                    $("#addNewModal").css("display", "none");
+                    clearAddNewWindow();
+                    requestItems();
+                },
+                error: onAjaxError
+            });
+        }
+
+        function onAddNewCancel() {
+            $("#addNewModal").css("display", "none");
+        }
+
+        function clearAddNewWindow() {
+            $("#addNewLogin").val("");
+            $("#addNewPassword").val("");
+            $("#addNewPasswordConfirm").val("");
+            $("#addNewPasswordsDontMatch").css("display", "none");
+            $("#addNewName").val("");
+            $("#addNewJobName").val("");
+            $("#addNewPhoneNumber").val("");
+            $("#addNewEmail").val("");
+        }
+    </script>
+    <style>
+        .employeesTable {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th.employeesTable {
+            height: 35px;
+            background-color: #4CAF50;
+            text-align: left;
+            color: white;
+        }
+        td.employeesTable {
+            height: 25px;
+        }
+        th.employeesTable, td.employeesTable {
+            padding: 5px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 100px;
+        }
+        .modalWindow {
+            margin: auto;
+            background-color: white;
+            width: 50%;
+            padding: 10px 10px 10px 10px;
+        }
+        .modalDiv {
+            margin: 5px 0 5px 0;
+        }
+        .passwordsDontMatch {
+            display: none;
+            color: red;
+        }
+        .modalInput {
+            width: 80%;
+        }
+    </style>
+</head>
+<body style="font-family: sans-serif; line-height: 1.5em; margin: 0;">
+    <div><h3>Employees</h3></div>
+
+    <div style="margin-bottom: 10px;">
+        <button id="addNewButton" style="width: 150px">Add new</button>
+    </div>
+
+    <div>
+        <table id="employeesTable" style="width: 95%; font-size: 0.8em" class="employeesTable">
+            <tr class="employeesTable">
+                <th style="width: 10%" class="employeesTable">Login</th>
+                <th style="width: 17%" class="employeesTable">Name</th>
+                <th style="width: 11%" class="employeesTable">Department</th>
+                <th style="width: 13%" class="employeesTable">Job Name</th>
+                <th style="width: 9%" class="employeesTable">Phone Number</th>
+                <th style="width: 20%" class="employeesTable">Email</th>
+                <th style="width: 20%" class="employeesTable">Actions</th>
+            </tr>
+        </table>
+    </div>
+
+    <div id="chPasswordModal" class="modal">
+        <div id="chPasswordWindow" class="modalWindow">
+            <div><h3 id="chPasswordHeader"></h3></div>
+            <div class="modalDiv">Enter the new password:</div>
+            <div class="modalDiv"><input id="chPassword" class="modalInput" type="password"></div>
+            <div class="modalDiv">Confirm the new password:</div>
+            <div class="modalDiv"><input id="chPasswordConfirm" class="modalInput" type="password"></div>
+            <div id="chPasswordsDontMatch" class="modalDiv passwordsDontMatch">Password and confirmation password do not match</div>
+            <br>
+            <div class="modalDiv">
+                <button id="chPasswordOK">OK</button>
+                <button id="chPasswordCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addNewModal" class="modal" style="padding-top: 50px;">
+        <div id="addNewWindow" class="modalWindow">
+            <div><h3 id="addNewHeader">Adding a new employee</h3></div>
+            <div class="modalDiv">Login:</div>
+            <div class="modalDiv"><input id="addNewLogin" class="modalInput" type="text"></div>
+            <div class="modalDiv">Password:</div>
+            <div class="modalDiv"><input id="addNewPassword" class="modalInput" type="password"></div>
+            <div class="modalDiv">Password confirmation:</div>
+            <div class="modalDiv"><input id="addNewPasswordConfirm" class="modalInput" type="password"></div>
+            <div id="addNewPasswordsDontMatch" class="modalDiv passwordsDontMatch">Password and confirmation password do not match</div>
+            <div class="modalDiv">Name:</div>
+            <div class="modalDiv"><input id="addNewName" class="modalInput" type="text"></div>
+            <div class="modalDiv">Department:</div>
+            <div class="modalDiv"><select id="addNewDepartment" class="modalInput"></select></div>
+            <div class="modalDiv">Job name:</div>
+            <div class="modalDiv"><input id="addNewJobName" class="modalInput" type="text"></div>
+            <div class="modalDiv">Phone number:</div>
+            <div class="modalDiv"><input id="addNewPhoneNumber" class="modalInput" type="text"></div>
+            <div class="modalDiv">Email:</div>
+            <div class="modalDiv"><input id="addNewEmail" class="modalInput" type="text"></div>
+            <br>
+            <div class="modalDiv">
+                <button id="addNewOK">OK</button>
+                <button id="addNewCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
