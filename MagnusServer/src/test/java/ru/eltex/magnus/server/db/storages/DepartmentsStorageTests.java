@@ -3,6 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -16,8 +17,12 @@ class DepartmentsStorageTests {
     @AfterAll
     static void cleanup() {
         DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
-        for(Department d : storage.getAllDepartments()) {
-            storage.removeDepartmentById(d.getId());
+        try {
+            for(Department d : storage.getAllDepartments()) {
+                storage.removeDepartmentById(d.getId());
+            }
+        } catch (StorageException e) {
+            fail(e.getMessage());
         }
     }
 
@@ -36,17 +41,21 @@ class DepartmentsStorageTests {
     }
 
     void testInsertGetUpdateRemoveDepartment(DepartmentsStorage storage, Department d) {
-        assertTrue(storage.insertDepartmentAndAssignId(d));
-        Department d2 = storage.getDepartmentById(d.getId());
-        assertEquals(d, d2);
+        try {
+            assertTrue(storage.insertDepartmentAndAssignId(d));
+            Department d2 = storage.getDepartmentById(d.getId());
+            assertEquals(d, d2);
 
-        d.setName(d.getName() + " department");
-        assertTrue(storage.updateDepartment(d));
-        d2 = storage.getDepartmentById(d.getId());
-        assertEquals(d, d2);
+            d.setName(d.getName() + " department");
+            assertTrue(storage.updateDepartment(d));
+            d2 = storage.getDepartmentById(d.getId());
+            assertEquals(d, d2);
 
-        assertTrue(storage.removeDepartmentById(d.getId()));
+            assertTrue(storage.removeDepartmentById(d.getId()));
 
-        assertFalse(storage.getAllDepartments().contains(d));
+            assertFalse(storage.getAllDepartments().contains(d));
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
     }
 }

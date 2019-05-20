@@ -1,5 +1,6 @@
 package ru.eltex.magnus.server.db.storages;
 
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 
 import java.util.List;
@@ -11,7 +12,7 @@ public interface DepartmentsStorage {
     /**
      * @return all the {@link Department}s stored in the storage
      */
-    List<Department> getAllDepartments();
+    List<Department> getAllDepartments()  throws StorageException;
 
     /**
      * Searches for a department with specified id in the storage and returns it
@@ -26,7 +27,7 @@ public interface DepartmentsStorage {
      * @return {@literal true} if added successfully and {@literal false} if an error occurred or
      * a {@link Department} with the same id is already contained in the storage
      */
-    boolean insertDepartmentAndAssignId(Department department);
+    boolean insertDepartmentAndAssignId(Department department) throws StorageException;
 
     /**
      * Searches for the department with the same id in the storage and updates its fields
@@ -34,7 +35,7 @@ public interface DepartmentsStorage {
      * @return {@literal true} if updated successfully and {@literal false} if an error occurred or
      * if department was not found
      */
-    boolean updateDepartment(Department department);
+    boolean updateDepartment(Department department) throws StorageException;
 
     /**
      * Removes the department with specified id from the storage
@@ -42,5 +43,5 @@ public interface DepartmentsStorage {
      * @return {@literal true} if removed successfully and {@literal false} if an error occurred or
      *      * if department was not found
      */
-    boolean removeDepartmentById(int id);
+    boolean removeDepartmentById(int id) throws StorageException;
 }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.dataclasses.OfflineStreamer;
@@ -57,20 +58,23 @@ public class StreamersController {
         OfflineStreamersStorage offlineStreamersStorage = StoragesProvider.getOfflineStreamersStorage();
 
         List<StreamerInfo> onlineInfos = new ArrayList<>();
-        for(StreamerRequester streamer : StreamersServer.getAllStreamers()) {
-            String login = streamer.getLogin();
-            Employee employee = employeesStorage.getEmployeeByLogin(login);
-            onlineInfos.add(new StreamerInfo(employee));
-        }
-
         List<OfflineStreamerInfo> offlineInfos = new ArrayList<>();
-        for(OfflineStreamer streamer : offlineStreamersStorage.getAllOfflineStreamers()) {
-            String lastSeen = streamer.getLastSeenTimeAgo();
-            String login = streamer.getLogin();
-            Employee employee = employeesStorage.getEmployeeByLogin(login);
-            offlineInfos.add(new OfflineStreamerInfo(new StreamerInfo(employee), lastSeen));
-        }
+        try {
+            for (StreamerRequester streamer : StreamersServer.getAllStreamers()) {
+                String login = streamer.getLogin();
+                Employee employee = employeesStorage.getEmployeeByLogin(login);
+                onlineInfos.add(new StreamerInfo(employee));
+            }
 
+            for (OfflineStreamer streamer : offlineStreamersStorage.getAllOfflineStreamers()) {
+                String lastSeen = streamer.getLastSeenTimeAgo();
+                String login = streamer.getLogin();
+                Employee employee = employeesStorage.getEmployeeByLogin(login);
+                offlineInfos.add(new OfflineStreamerInfo(new StreamerInfo(employee), lastSeen));
+            }
+        } catch (StorageException e){
+            e.printStackTrace();
+        }
         return new StreamersListInfo(onlineInfos, offlineInfos);
     }
 

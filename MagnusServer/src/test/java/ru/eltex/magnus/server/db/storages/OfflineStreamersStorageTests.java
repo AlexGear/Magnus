@@ -3,6 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -21,7 +22,11 @@ class OfflineStreamersStorageTests {
         cleanup();
 
         department = new Department(0, "Some department");
-        StoragesProvider.getDepartmentsStorage().insertDepartmentAndAssignId(department);
+        try {
+            StoragesProvider.getDepartmentsStorage().insertDepartmentAndAssignId(department);
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
 
         employee = new Employee();
         employee.setLogin("iamoffline");
@@ -31,21 +36,32 @@ class OfflineStreamersStorageTests {
         employee.setJobName("Teacher");
         employee.setPhoneNumber("0912309");
         employee.setEmail("lkajsdf@lkjadsf.ru");
-        StoragesProvider.getEmployeesStorage().insertEmployee(employee);
+        try {
+            StoragesProvider.getEmployeesStorage().insertEmployee(employee);
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
     }
 
     @AfterAll
     static void removeDepartmentAndEmployee() {
-        StoragesProvider.getEmployeesStorage().removeEmployeeByLogin(employee.getLogin());
-        StoragesProvider.getDepartmentsStorage().removeDepartmentById(department.getId());
-
+        try {
+            StoragesProvider.getEmployeesStorage().removeEmployeeByLogin(employee.getLogin());
+            StoragesProvider.getDepartmentsStorage().removeDepartmentById(department.getId());
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
         cleanup();
     }
 
     static void cleanup() {
         OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
-        for(OfflineStreamer o : storage.getAllOfflineStreamers()) {
-            storage.removeOfflineStreamerByLogin(o.getLogin());
+        try {
+            for(OfflineStreamer o : storage.getAllOfflineStreamers()) {
+                storage.removeOfflineStreamerByLogin(o.getLogin());
+            }
+        } catch (StorageException e) {
+            fail(e.getMessage());
         }
     }
 
@@ -64,24 +80,28 @@ class OfflineStreamersStorageTests {
     }
 
     void testInsertGetUpdateRemoveOfflineStreamer(OfflineStreamersStorage storage, OfflineStreamer o) {
-        assertTrue(storage.insertOfflineStreamer(o));
-        OfflineStreamer o2 = storage.getOfflineStreamerByLogin(o.getLogin());
-        assertEquals(o, o2);
+        try {
+            assertTrue(storage.insertOfflineStreamer(o));
+            OfflineStreamer o2 = storage.getOfflineStreamerByLogin(o.getLogin());
+            assertEquals(o, o2);
 
-        o.setLastSeen(new Timestamp(19812453));
-        assertTrue(storage.updateOfflineStreamer(o));
-        o2 = storage.getOfflineStreamerByLogin(o.getLogin());
-        assertEquals(o, o2);
+            o.setLastSeen(new Timestamp(19812453));
+            assertTrue(storage.updateOfflineStreamer(o));
+            o2 = storage.getOfflineStreamerByLogin(o.getLogin());
+            assertEquals(o, o2);
 
-        assertTrue(storage.removeOfflineStreamerByLogin(o.getLogin()));
+            assertTrue(storage.removeOfflineStreamerByLogin(o.getLogin()));
 
-        assertFalse(storage.getAllOfflineStreamers().contains(o));
+            assertFalse(storage.getAllOfflineStreamers().contains(o));
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
     void testImpossibilityToInsertOfflineStreamerWithNonexistentLogin() {
         OfflineStreamersStorage storage = StoragesProvider.getOfflineStreamersStorage();
         OfflineStreamer o = new OfflineStreamer(employee.getLogin() + "imnotreal", new Timestamp(0));
-        assertFalse(storage.insertOfflineStreamer(o));
+        assertThrows(StorageException.class, ()-> storage.insertOfflineStreamer(o));
     }
 }

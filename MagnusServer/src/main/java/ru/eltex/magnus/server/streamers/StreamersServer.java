@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.eltex.magnus.server.App;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.dataclasses.OfflineStreamer;
@@ -121,6 +122,8 @@ public class StreamersServer {
             }
         } catch (IOException e) {
             LOG.warn("Exception while waiting streamer to sign in: " + e.toString());
+        } catch (StorageException e){
+            LOG.warn(e.getMessage());
         }
     }
 
@@ -132,8 +135,13 @@ public class StreamersServer {
         String login = authArray[0];
         String password = authArray[1];
 
-        Employee employee = storage.getEmployeeByLogin(login);
-        if (employee == null) return false;
+        Employee employee = null;
+        try {
+            employee = storage.getEmployeeByLogin(login);
+            if (employee == null) return false;
+        } catch (StorageException e) {
+            e.printStackTrace();
+        }
 
         return PASSWORD_ENCODER.matches(password, employee.getPassword());
     }
@@ -162,7 +170,11 @@ public class StreamersServer {
             LOG.info("Streamer disconnected: " + streamer.getLogin());
             streamer.close();
             OfflineStreamer offlineStreamer = OfflineStreamer.forCurrentTime(streamer.getLogin());
-            storage.insertOfflineStreamer(offlineStreamer);
+            try {
+                storage.insertOfflineStreamer(offlineStreamer);
+            } catch (StorageException e) {
+                e.printStackTrace();
+            }
         }
     }
 

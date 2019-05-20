@@ -3,6 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Viewer;
 
@@ -13,8 +14,12 @@ class ViewersStorageTests {
     @AfterAll
     static void cleanup() {
         ViewersStorage storage = StoragesProvider.getViewersStorage();
-        for(Viewer v : storage.getAllViewers()) {
-            storage.removeViewerByLogin(v.getLogin());
+        try {
+            for(Viewer v : storage.getAllViewers()) {
+                storage.removeViewerByLogin(v.getLogin());
+            }
+        } catch (StorageException e) {
+            fail(e.getMessage());
         }
     }
 
@@ -33,17 +38,21 @@ class ViewersStorageTests {
     }
 
     void testInsertGetUpdateRemoveViewer(ViewersStorage storage, Viewer v) {
-        assertTrue(storage.insertViewer(v));
-        Viewer v2 = storage.getViewerByLogin(v.getLogin());
-        assertEquals(v, v2);
+        try {
+            assertTrue(storage.insertViewer(v));
+            Viewer v2 = storage.getViewerByLogin(v.getLogin());
+            assertEquals(v, v2);
 
-        v.setName(v.getName() + " Bob");
-        assertTrue(storage.updateViewer(v));
-        v2 = storage.getViewerByLogin(v.getLogin());
-        assertEquals(v, v2);
+            v.setName(v.getName() + " Bob");
+            assertTrue(storage.updateViewer(v));
+            v2 = storage.getViewerByLogin(v.getLogin());
+            assertEquals(v, v2);
 
-        assertTrue(storage.removeViewerByLogin(v.getLogin()));
+            assertTrue(storage.removeViewerByLogin(v.getLogin()));
 
-        assertFalse(storage.getAllViewers().contains(v));
+            assertFalse(storage.getAllViewers().contains(v));
+        } catch (StorageException e) {
+            e.printStackTrace();
+        }
     }
 }

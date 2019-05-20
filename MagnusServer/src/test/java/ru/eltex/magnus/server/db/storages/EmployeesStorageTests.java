@@ -3,6 +3,7 @@ package ru.eltex.magnus.server.db.storages;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
@@ -19,21 +20,33 @@ class EmployeesStorageTests {
         cleanup();
 
         DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
-        storage.insertDepartmentAndAssignId(department);
+        try {
+            storage.insertDepartmentAndAssignId(department);
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
     }
 
     @AfterAll
     static void removeDepartment() {
         DepartmentsStorage storage = StoragesProvider.getDepartmentsStorage();
-        storage.removeDepartmentById(department.getId());
+        try {
+            storage.removeDepartmentById(department.getId());
+        } catch (StorageException e) {
+            fail(e.getMessage());
+        }
 
         cleanup();
     }
 
     static void cleanup() {
         EmployeesStorage storage = StoragesProvider.getEmployeesStorage();
-        for(Employee d : storage.getAllEmployees()) {
-            storage.removeEmployeeByLogin(d.getLogin());
+        try {
+            for(Employee d : storage.getAllEmployees()) {
+                storage.removeEmployeeByLogin(d.getLogin());
+            }
+        } catch (StorageException e) {
+            fail(e.getMessage());
         }
     }
 
@@ -73,19 +86,23 @@ class EmployeesStorageTests {
     }
 
     void testInsertGetUpdateRemoveEmployee(EmployeesStorage storage, Employee e) {
-        assertTrue(storage.insertEmployee(e));
-        Employee e2 = storage.getEmployeeByLogin(e.getLogin());
-        assertEquals(e, e2);
+        try {
+            assertTrue(storage.insertEmployee(e));
+            Employee e2 = storage.getEmployeeByLogin(e.getLogin());
+            assertEquals(e, e2);
 
-        e.setJobName(e.getJobName() + "test");
-        e.setName("Dr. " + e.getName());
-        assertTrue(storage.updateEmployee(e));
-        e2 = storage.getEmployeeByLogin(e.getLogin());
-        assertEquals(e, e2);
+            e.setJobName(e.getJobName() + "test");
+            e.setName("Dr. " + e.getName());
+            assertTrue(storage.updateEmployee(e));
+            e2 = storage.getEmployeeByLogin(e.getLogin());
+            assertEquals(e, e2);
 
-        assertTrue(storage.removeEmployeeByLogin(e.getLogin()));
+            assertTrue(storage.removeEmployeeByLogin(e.getLogin()));
 
-        assertFalse(storage.getAllEmployees().contains(e));
+            assertFalse(storage.getAllEmployees().contains(e));
+        } catch (StorageException ex) {
+            fail(ex.getMessage());
+        }
     }
 
     @Test
@@ -101,6 +118,6 @@ class EmployeesStorageTests {
         e.setPhoneNumber("09120123");
         e.setEmail("happy@dude.com");
 
-        assertFalse(storage.insertEmployee(e));
+        assertThrows(StorageException.class, ()-> storage.insertEmployee(e));
     }
 }
