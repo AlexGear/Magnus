@@ -1,0 +1,242 @@
+<html>
+<head>
+    <script>
+        $(document).ready(function() {
+            requestData();
+        });
+
+        function requestData() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/admin/get_admin',
+                success: populateTable
+            });
+        }
+
+        function populateTable(data) {
+            let table = document.getElementById("adminTable");
+            let rowsLength = table.rows.length;
+            for (let i = 1; i < rowsLength; i++) {
+                table.deleteRow(1);
+            }
+            let row = table.insertRow(1);
+            insertRow(data, row);
+        }
+
+        function insertRow(admin, row) {
+            let i = 0;
+            const loginCell = insertEditableCell(row, i++, admin.login, "INPUT");
+
+            // ACTIONS
+            const actions = row.insertCell(i++);
+            const editButton = createButton("Edit", actions);
+            const changePasswordButton = createButton("Change password", actions);
+            const okEditButton = createButton("OK", actions);
+            const cancelEditButton = createButton("Cancel", actions);
+
+            $(okEditButton).css("display", "none");
+            $(cancelEditButton).css("display", "none");
+
+            $(editButton).click(function() {
+                $(editButton).css("display", "none");
+                $(changePasswordButton).css("display", "none");
+                $(okEditButton).css("display", "");
+                $(cancelEditButton).css("display", "");
+
+                editMode(loginCell, textToInputFilling);
+            });
+
+            $(changePasswordButton).click(function() {
+                $("#chPassword").val("");
+                $("#chPasswordConfirm").val("");
+                $("#chPasswordModal").css("display", "block");
+                $("#chPasswordHeader").text("Password change for user '" + admin.login + "'");
+                $("#chPasswordsDontMatch").css("display", "none");
+                
+                $("#chPasswordOK").off("click").on("click", () => onChangePasswordOK(admin.login));
+                $("#chPasswordCancel").off("click").on("click", onChangePasswordCancel);
+            });
+
+            $(okEditButton).click(function() {
+                let data = {
+                    login: loginCell.edit.value,
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "/admin/edit_admin", 
+                    data: data,
+                    success: function() {
+                        leaveEditModeAll(true);
+                    },
+                    error: onAjaxError
+                });
+            });
+
+            $(cancelEditButton).click(function() {
+                leaveEditModeAll(false);
+            });
+
+            function leaveEditModeAll(doApply) {
+                let fillingFunc = doApply ? inputToTextFilling : null;
+                leaveEdit(loginCell, fillingFunc);
+                
+                $(editButton).css("display", "");
+                $(changePasswordButton).css("display", "");
+                $(okEditButton).css("display", "none");
+                $(cancelEditButton).css("display", "none");
+            }
+        }
+
+        function onAjaxError(data) {
+            alert("An error with status code " + data.status + " occurred: " + data.responseText);
+            console.log("Ajax error", data);
+        }
+
+        function insertEditableCell(row, pos, text, editElementName) {
+            const cell = row.insertCell(pos);
+
+            const p = document.createElement("P");
+            p.innerText = text;
+            $(p).css("width", "100%");
+
+            cell.appendChild(p);
+            const editElement = document.createElement(editElementName);
+            $(editElement).css("width", "100%");
+            $(editElement).css("display", "none");
+            cell.appendChild(editElement);
+            
+            return { text: p, edit: editElement };
+        }
+
+        function createButton(text, parent) {
+            let button = document.createElement("BUTTON");
+            button.innerText = text;
+            parent.appendChild(button);
+            return button;
+        }
+
+        function editMode(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.text, cell.edit);
+            }
+            $(cell.text).css("display", "none");
+            $(cell.edit).css("display", "");
+        }
+
+        function textToInputFilling(text, input) {
+            input.value = text.innerText;
+        }
+
+        function leaveEdit(cell, fillingFunc) {
+            if (fillingFunc != undefined && fillingFunc != null) {
+                fillingFunc(cell.edit, cell.text);
+            }
+            $(cell.text).css("display", "");
+            $(cell.edit).css("display", "none");
+        }
+
+        function inputToTextFilling(input, text) {
+            text.innerText = input.value;
+        }
+
+        function onChangePasswordOK(login) {
+            let password = $("#chPassword").val();
+            let confirmation = $("#chPasswordConfirm").val();
+            if (password != confirmation) {
+                $("#chPasswordsDontMatch").css("display", "block");
+                return;
+            }
+
+            $("#chPasswordsDontMatch").css("display", "none");
+            $.ajax({
+                type: "POST",
+                url: "/admin/change_admin_password", 
+                data: { login: login, password: password },
+                success: function() {
+                    $("#chPasswordModal").css("display", "none");
+                    alert("Password changed successfully");
+                },
+                error: onAjaxError
+            });
+        }
+
+        function onChangePasswordCancel() {
+            $("#chPasswordModal").css("display", "none");
+        }
+    </script>
+    <style>
+        .adminTable {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th.adminTable {
+            height: 35px;
+            background-color: #4CAF50;
+            text-align: left;
+            color: white;
+        }
+        td.adminTable {
+            height: 25px;
+        }
+        th.adminTable, td.adminTable {
+            padding: 5px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 100px;
+        }
+        .modalWindow {
+            margin: auto;
+            background-color: white;
+            width: 50%;
+            padding: 10px 10px 10px 10px;
+        }
+        .modalDiv {
+            margin: 5px 0 5px 0;
+        }
+        .passwordsDontMatch {
+            display: none;
+            color: red;
+        }
+        .modalInput {
+            width: 80%;
+        }
+    </style>
+</head>
+<body style="font-family: sans-serif; line-height: 1.5em; margin: 0;">
+    <div><h3>Admin</h3></div>
+
+    <div>
+        <table id="adminTable" style="width: 65%; font-size: 0.8em" class="adminTable">
+            <tr class="adminTable">
+                <th style="width: 25%" class="adminTable">Login</th>
+                <th style="width: 35%" class="adminTable">Actions</th>
+            </tr>
+        </table>
+    </div>
+
+    <div id="chPasswordModal" class="modal">
+        <div id="chPasswordWindow" class="modalWindow">
+            <div><h3 id="chPasswordHeader"></h3></div>
+            <div class="modalDiv">Enter the new password:</div>
+            <div class="modalDiv"><input id="chPassword" class="modalInput" type="password"></div>
+            <div class="modalDiv">Confirm the new password:</div>
+            <div class="modalDiv"><input id="chPasswordConfirm" class="modalInput" type="password"></div>
+            <div id="chPasswordsDontMatch" class="modalDiv passwordsDontMatch">Password and confirmation password do not match</div>
+            <br>
+            <div class="modalDiv">
+                <button id="chPasswordOK">OK</button>
+                <button id="chPasswordCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

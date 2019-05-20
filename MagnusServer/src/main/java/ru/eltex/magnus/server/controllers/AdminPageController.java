@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.eltex.magnus.server.StorageException;
 import ru.eltex.magnus.server.db.StoragesProvider;
+import ru.eltex.magnus.server.db.dataclasses.Admin;
 import ru.eltex.magnus.server.db.dataclasses.Department;
 import ru.eltex.magnus.server.db.dataclasses.Employee;
 import ru.eltex.magnus.server.db.dataclasses.Viewer;
+import ru.eltex.magnus.server.db.storages.AdminStorage;
 import ru.eltex.magnus.server.db.storages.DepartmentsStorage;
 import ru.eltex.magnus.server.db.storages.EmployeesStorage;
 import ru.eltex.magnus.server.db.storages.ViewersStorage;
@@ -304,6 +306,62 @@ public class AdminPageController {
         ViewersStorage storage = StoragesProvider.getViewersStorage();
         try {
             if (storage.removeViewerByLogin(login)) {
+                return ResponseEntity.ok("OK");
+            }
+        } catch (StorageException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @GetMapping("/admin/get_admin")
+    public Admin getAdmin() {
+        Admin admin = null;
+        try {
+            admin = StoragesProvider.getAdminStorage().getAdmin();
+            admin.setPassword("");
+        } catch (StorageException e) {
+            e.printStackTrace();
+        }
+        return admin;
+    }
+
+    @RequestMapping("/admin/edit_admin")
+    public ResponseEntity<String> editAdmin(@RequestParam("login") String login) {
+        AdminStorage storage = StoragesProvider.getAdminStorage();
+        Admin admin;
+        try {
+            admin = storage.getAdmin();
+            if (admin == null) {
+                String body = "Admin not found";
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+            }
+            if (login.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("login is empty");
+            }
+
+            admin.setLogin(login);
+            if (storage.updateAdmin(admin)) {
+                return ResponseEntity.ok("OK");
+            }
+        } catch (StorageException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+        return ResponseEntity.status(520).body("Unknown error");
+    }
+
+    @RequestMapping("/admin/change_admin_password")
+    public ResponseEntity<String> changeAdminPassword(@RequestParam("password") String password) {
+        AdminStorage storage = StoragesProvider.getAdminStorage();
+        Admin admin;
+        try {
+            admin = storage.getAdmin();
+            if (admin == null) {
+                String body = "Admin not found";
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+            }
+            admin.setPassword(new BCryptPasswordEncoder().encode(password));
+            if (storage.updateAdmin(admin)) {
                 return ResponseEntity.ok("OK");
             }
         } catch (StorageException e) {
