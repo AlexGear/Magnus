@@ -1,5 +1,7 @@
 package ru.eltex.magnus.server.controllers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,15 +13,20 @@ import ru.eltex.magnus.server.streamers.StreamersServer;
 
 @RestController
 public class ImageController {
+
+    private static final Logger LOG = LogManager.getLogger(ImageController.class);
+
     @GetMapping("/screenshot")
     public ResponseEntity<byte[]> getScreenshot(@RequestParam("login") String login) {
         StreamerRequester streamerRequester = StreamersServer.getStreamerByLogin(login);
         if (streamerRequester == null) {
+            LOG.warn("Failed to get streamerRequester");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         byte[] screenshot = streamerRequester.getScreenshot();
         if(screenshot == null) {
+            LOG.warn("Failed to get screenshot: unknown error");
             final int unknownError = 520;
             return ResponseEntity.status(unknownError).body(null);
         }
