@@ -4,6 +4,7 @@ import org.apache.commons.dbcp.BasicDataSource
 import org.apache.logging.log4j.LogManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import ru.eltex.magnus.server.StorageException
 import ru.eltex.magnus.server.db.dataclasses.*
 import ru.eltex.magnus.server.db.storages.*
 import java.sql.*
@@ -57,7 +58,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get all employees from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get all employees" , e)
         }
     }
 
@@ -84,7 +85,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get employee by login '$login' from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get employee by login" , e)
         }
     }
 
@@ -99,7 +100,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to insert employee ($employee) into DB (URL: $connectionURL): $e")
-            false
+            throw  StorageException("Failed to insert employee", e)
         }
     }
 
@@ -114,7 +115,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to update employee ($employee) in DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update employee", e)
         }
     }
 
@@ -126,7 +127,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, login)
         } catch (e: SQLException) {
             LOG.warn("Failed to delete employee by login '$login' from DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to delete employee by login", e)
         }
     }
 
@@ -138,7 +139,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get all departments from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get all departments", e)
         }
     }
 
@@ -150,7 +151,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get department by id '$id' from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get department by id", e)
         }
     }
 
@@ -164,7 +165,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to insert department ($department) into DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to insert department", e)
         }
     }
 
@@ -176,7 +177,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, department.name, department.id)
         } catch (e: SQLException) {
             LOG.warn("Failed to update department ($department) in DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update department", e)
         }
     }
 
@@ -186,7 +187,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, id)
         } catch (e: SQLException) {
             LOG.warn("Failed to delete department by id '$id' from DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update department by id", e)
         }
     }
 
@@ -198,7 +199,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get all viewers from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get all viewers", e)
         }
     }
 
@@ -210,7 +211,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get viewer by login '$login' from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get viewer by login", e)
         }
     }
 
@@ -222,7 +223,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, viewer.login, viewer.password, viewer.name)
         } catch (e: SQLException) {
             LOG.warn("Failed to insert viewer ($viewer) into DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to insert viewer ", e)
         }
     }
 
@@ -234,7 +235,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, viewer.password, viewer.name, viewer.login)
         } catch (e: SQLException) {
             LOG.warn("Failed to update viewer ($viewer) in DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update viewer ", e)
         }
     }
 
@@ -246,7 +247,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, login)
         } catch (e: SQLException) {
             LOG.warn("Failed to delete viewer by login '$login' from DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update viewer by login", e)
         }
     }
 
@@ -258,7 +259,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get all offline streamers from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get all offline streamers ", e)
         }
     }
 
@@ -270,7 +271,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get offline streamer by login '$login' from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get offline streamer by login ", e)
         }
     }
 
@@ -282,7 +283,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, offlineStreamer.login, offlineStreamer.lastSeen)
         } catch (e: SQLException) {
             LOG.warn("Failed to insert offline streamer ($offlineStreamer) into DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to insert offline streamer", e)
         }
     }
 
@@ -294,7 +295,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, offlineStreamer.lastSeen, offlineStreamer.login)
         } catch (e: SQLException) {
             LOG.warn("Failed to update offline streamer ($offlineStreamer) in DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update offline streamer", e)
         }
     }
 
@@ -306,7 +307,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, login)
         } catch (e: SQLException) {
             LOG.warn("Failed to remove offline streamer by login '$login' from DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to remove offline streamer by login", e)
         }
     }
 
@@ -318,7 +319,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             }
         } catch (e: SQLException) {
             LOG.warn("Failed to get admin credential from DB (URL: $connectionURL): $e")
-            null
+            throw StorageException("Failed to get admin credential", e)
         }
     }
 
@@ -330,7 +331,7 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
             executeUpdate(sql, admin.login, admin.password)
         } catch (e: SQLException) {
             LOG.warn("Failed to update admin credential ($admin) in DB (URL: $connectionURL): $e")
-            false
+            throw StorageException("Failed to update admin credential", e)
         }
     }
 
