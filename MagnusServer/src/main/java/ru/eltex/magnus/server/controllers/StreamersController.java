@@ -1,5 +1,7 @@
 package ru.eltex.magnus.server.controllers;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +23,11 @@ import java.util.List;
 
 @RestController
 public class StreamersController {
+
+    private static final Logger LOG = LogManager.getLogger(StreamersController.class);
+
     public static class StreamerInfo {
+
         public final String login, name, department, jobName, phoneNumber, email;
 
         public StreamerInfo(Employee src) {
@@ -72,10 +78,13 @@ public class StreamersController {
                 Employee employee = employeesStorage.getEmployeeByLogin(login);
                 offlineInfos.add(new OfflineStreamerInfo(new StreamerInfo(employee), lastSeen));
             }
+
+            return new StreamersListInfo(onlineInfos, offlineInfos);
+
         } catch (StorageException e){
-            e.printStackTrace();
+            LOG.warn(e.getMessage());
+            return null;
         }
-        return new StreamersListInfo(onlineInfos, offlineInfos);
     }
 
     @RequestMapping("/send_message")
@@ -83,9 +92,11 @@ public class StreamersController {
         StreamerRequester streamerRequester = StreamersServer.getStreamerByLogin(login);
         if (streamerRequester == null) {
             String body = "User with login '" + login + "' not found";
+            LOG.warn("Failed to send message: " + body);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
         streamerRequester.sendNotification(message);
+        LOG.info("Message " + message + " has sent");
         return ResponseEntity.ok("OK");
     }
 }
