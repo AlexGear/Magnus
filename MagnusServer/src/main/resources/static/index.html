@@ -122,6 +122,14 @@
                         streamPlayer.src = "/screenshot?login=" + streamer.login + "&nocache=" + Math.floor(Math.random() * 1000000);
                     }, 200);
                 };
+                cell.onmouseover = function() {
+                    $(cell).css("background-color", "#65ceff");
+                    document.body.style.cursor = "pointer";
+                };
+                cell.onmouseout = function() {
+                    $(cell).css("background-color", "white");
+                    document.body.style.cursor = "auto";
+                };
             }
             else if(streamer.login == currentStreamerLogin){
                 closeStream();
