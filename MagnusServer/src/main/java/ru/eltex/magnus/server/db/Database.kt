@@ -429,15 +429,15 @@ class Database(properties: DatabaseProperties) : EmployeesStorage, DepartmentsSt
     override fun setSqlQuery(authenticationMgr : AuthenticationManagerBuilder){
         authenticationMgr.jdbcAuthentication().dataSource(getDataSource())
                 .usersByUsernameQuery("SELECT * FROM (" +
-                        "SELECT login as username, password, true as enabled FROM $VIEWERS_TABLE WHERE login=? " +
+                        "SELECT login as username, password, true as enabled FROM $VIEWERS_TABLE " +
                         "UNION " +
                         "SELECT login as username, password, true as enabled FROM $ADMIN_TABLE" +
-                        ") as tbl LIMIT 1")
+                        ") tbl WHERE username=?")
                 .authoritiesByUsernameQuery("SELECT * FROM (" +
-                        "SELECT login as username, 'ROLE_VIEWER' as authority FROM $VIEWERS_TABLE WHERE login=? " +
+                        "SELECT login as username, 'ROLE_VIEWER' as authority FROM $VIEWERS_TABLE " +
                         "UNION " +
                         "SELECT login as username, 'ROLE_ADMIN' as authority FROM $ADMIN_TABLE" +
-                        ") as tbl LIMIT 1")
+                        ") tbl WHERE username=?")
                 .passwordEncoder(BCryptPasswordEncoder())
     }
 }
