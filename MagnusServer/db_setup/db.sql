@@ -102,7 +102,7 @@ CREATE TABLE `offline_streamers` (
   `login` varchar(30) NOT NULL,
   `last_seen` datetime NOT NULL,
   PRIMARY KEY (`login`),
-  CONSTRAINT `offline_streamers_ibfk_1` FOREIGN KEY (`login`) REFERENCES `employees` (`login`)
+  CONSTRAINT `offline_streamers_ibfk_1` FOREIGN KEY (`login`) REFERENCES `employees` (`login`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
