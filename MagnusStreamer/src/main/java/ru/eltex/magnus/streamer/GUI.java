@@ -68,9 +68,10 @@ public class GUI extends JFrame {
 
     private void loadIcons() {
         try {
-            normalIcon = ImageIO.read(new File("normalIcon.png"));
-            warningIcon = ImageIO.read(new File("warningIcon.png"));
-            errorIcon = ImageIO.read(new File("errorIcon.png"));
+            ClassLoader classLoader = getClass().getClassLoader();
+            normalIcon = ImageIO.read(classLoader.getResource("normalIcon.png"));
+            warningIcon = ImageIO.read(classLoader.getResource("warningIcon.png"));
+            errorIcon = ImageIO.read(classLoader.getResource("errorIcon.png"));
         } catch (IOException e) {
             final String message = "Failed to load icon(s)";
             LOG.error(message);

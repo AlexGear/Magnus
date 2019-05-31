@@ -31,6 +31,10 @@ jar {
     manifest {
         attributes 'Main-Class': 'ru.eltex.magnus.streamer.App'
     }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 //tasks.withType(FindBugs) {
